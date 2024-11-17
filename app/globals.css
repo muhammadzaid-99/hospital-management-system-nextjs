@@ -112,12 +112,41 @@
 }
 
 
-::-webkit-scrollbar-thumb {
+/* ::-webkit-scrollbar-thumb {
   display: none;
   width: 0;
 }
 
 ::-webkit-scrollbar-track {
   display: none;
+} */
+
+/* For WebKit browsers like Chrome, Safari, Edge */
+::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+  height: 8px;
 }
 
+::-webkit-scrollbar-track {
+  background-color: #ebe9e9; /* Dark background for the scrollbar track */
+  border-radius: 10px; /* Rounded corners for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cfcece; /* Darker color for the thumb (scroll handle) */
+  border-radius: 10px; /* Rounded corners for the thumb */
+  border: 2px solid transparent; /* Adds space between the thumb and track */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #c4c2c2; /* Lighter color on hover for better visibility */
+}
+
+/* this removes arrows from input of type number */
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}

@@ -117,7 +117,7 @@ export async function getUserProfileInfo() {
   if (data.user) {
     const email = data.user.email
 
-    const { data: pdata, error } = await supabase.from('profiles').select('first_name, last_name, gender')
+    const { data: pdata, error } = await supabase.from('profiles').select('first_name, last_name, gender').eq('auth_uid', data.user.id)
 
     if (!error && pdata && email) {
       const profileData = { ...pdata[0], email }

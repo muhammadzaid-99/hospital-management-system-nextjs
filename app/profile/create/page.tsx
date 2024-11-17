@@ -38,6 +38,8 @@ export default function ProfileCreationPage() {
                 router.push('/patient/register')
             else if (profile === 'Doctor') {
                 router.push('/doctor/profile/created')
+            } else if (profile === 'Operator') {
+                router.push('/operator/register')
             } else {
                 setPageLoaded(true)
             }

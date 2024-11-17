@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { LoginForm } from '@/components/forms/LoginForm'
 import { SignupForm } from '@/components/forms/SignupForm'
 import { emailLogin, oAuthSignIn, signup } from '../../lib/actions/user.actions'
@@ -35,7 +36,7 @@ export function OAuthButtons() {
         displayName: "Google",
     }];
 
-    return <>
+    return (<>
         {providers.map(provider => (
             <Button key={provider.name} variant="outline" className='w-full' onClick={async () => {
                 await oAuthSignIn(provider.name)
@@ -43,11 +44,11 @@ export function OAuthButtons() {
                 Continue with {provider.displayName}
             </Button>
         ))}
-    </>
+    </>)
 }
 
 const logoutFirst = async () => {
-    // const lg = await logout() 
+    const lg = await logout()
 }
 
 
@@ -57,20 +58,24 @@ export default function LoginPage() {
     }, [])
 
     return (
-        <section className="w-screen h-dvh p-6 flex justify-center">
-            <div className="space-y-10 w-full max-w-80 mt-40">
-                <h1 className="font-bold text-xl text-center">
-                    Hospital Management System
-                </h1>
+        <section className="w-screen h-dvh p-6 flex flex-col items-center">
+            <h1 className="font-extrabold text-2xl self-center mx-2 mt-32 mb-10">
+                Hospital Management System
+            </h1>
+            <div className="space-y-10 w-full max-w-96 ">
                 <Card className="w-[400px]">
                     <Tabs defaultValue="login" >
-                        <TabsList className="grid w-full grid-cols-2 h-10 rounded-b-none">
-                            <TabsTrigger value="login" className="h-full data-[state=active]:bg-transparent data-[state=active]:font-bold">Login</TabsTrigger>
-                            <TabsTrigger value="signup" className="h-full data-[state=active]:bg-transparent data-[state=active]:font-bold">Signup</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-2 h-10 rounded-b-none p-0">
+                            <TabsTrigger value="login" className="h-full rounded-none rounded-tl-xl data-[state=active]:bg-white data-[state=active]:shadow-none data-[state=active]:text-xl data-[state=active]:font-bold transition-transform group">
+                                <span className='transform group-data-[state=active]:translate-y-2 ease-in-out duration-200'>Login</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="signup" className="h-full rounded-none rounded-tr-xl data-[state=active]:bg-white data-[state=active]:shadow-none data-[state=active]:text-xl data-[state=active]:font-bold transition-transform group">
+                                <span className='transform group-data-[state=active]:translate-y-2 ease-in-out duration-200'>Signup</span>
+                            </TabsTrigger>
                         </TabsList>
                         <TabsContent value="login">
                             <CardHeader>
-                                <CardTitle>Login</CardTitle>
+                                {/* <CardTitle>Login</CardTitle> */}
                                 {/* <CardDescription>Card Description</CardDescription> */}
                             </CardHeader>
                             <CardContent>
@@ -82,7 +87,7 @@ export default function LoginPage() {
                         </TabsContent>
                         <TabsContent value="signup">
                             <CardHeader>
-                                <CardTitle>Sign Up</CardTitle>
+                                {/* <CardTitle>Sign Up</CardTitle> */}
                                 {/* <CardDescription>Card Description</CardDescription> */}
                             </CardHeader>
                             <CardContent>

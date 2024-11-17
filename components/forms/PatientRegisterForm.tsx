@@ -13,7 +13,6 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import DatePicker from "react-datepicker";
 import {
     Select,
     SelectContent,
@@ -39,6 +38,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from 'next/navigation'
 import { getUserEmail } from "@/lib/actions/user.actions"
 import { getUserProfileInfo } from "@/lib/actions/user.actions"
+import DatePicker from "@/components/custom/DatePicker"
 
 const profileCreateFormSchema = z.object({
     email: z.string()
@@ -244,7 +244,7 @@ export function PatientRegisterForm({ profileData }: { profileData: profileDataI
                         render={({ field }) => (
                             <FormItem className="flex flex-col w-full">
                                 <FormLabel>Date of birth</FormLabel>
-                                <Popover>
+                                {/* <Popover>
                                     <PopoverTrigger asChild>
                                         <FormControl>
                                             <Button
@@ -277,7 +277,8 @@ export function PatientRegisterForm({ profileData }: { profileData: profileDataI
                                             initialFocus
                                         />
                                     </PopoverContent>
-                                </Popover>
+                                </Popover> */}
+                                <DatePicker field={field} />
                                 <FormDescription>
                                     Your DOB is used to calculate your age.
                                 </FormDescription>

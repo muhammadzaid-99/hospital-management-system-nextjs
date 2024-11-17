@@ -28,10 +28,11 @@ import 'react-datepicker/dist/react-datepicker.css';
 import ClipLoader from "react-spinners/ClipLoader"
 import { createSchedule } from "@/lib/actions/doctor.actions"
 import { useState } from "react"
+import { DateTimePicker } from "../custom/DateTimePicker"
 
 
 const schema = z.object({
-    expected_patients: z.number().min(1, "Expected patients must be at least 1"),
+    expected_patients: z.number().min(1, "Expected patients must be at least 1").max(100, "Cannot be more than 100"),
     from_time: z.date().min(new Date(), "From time must be in the future"),
     to_time: z.date(),
 }).refine((data) => data.to_time > data.from_time, {
@@ -39,11 +40,11 @@ const schema = z.object({
     path: ["to_time"], // This specifies where the error will appear
 });
 
-export function ScheduleCreateForm() {
+export function ScheduleCreateForm({ alertNewSchedule }: { alertNewSchedule: () => void }) {
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: {
-            expected_patients: 1,
+            expected_patients: 4,
             from_time: new Date(),
             to_time: new Date(new Date().getTime() + 60 * 60 * 1000), // One hour later
         }
@@ -60,7 +61,8 @@ export function ScheduleCreateForm() {
 
         const schCreate = await createSchedule(data)
         if (schCreate) {
-            alert('created')
+            alertNewSchedule()
+            // alert('created')
         } else {
             alert('failed')
         }
@@ -72,7 +74,7 @@ export function ScheduleCreateForm() {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                     control={form.control}
                     name="expected_patients"
@@ -96,10 +98,10 @@ export function ScheduleCreateForm() {
                     control={form.control}
                     name="from_time"
                     render={({ field }) => (
-                        <FormItem className="flex gap-2 items-center ">
+                        <FormItem >
                             <FormLabel htmlFor="from_time">From Time</FormLabel>
                             <FormControl>
-                                <DatePicker
+                                {/* <DatePicker
                                     selected={field.value} // Pass the current Date value
                                     onChange={(date) => field.onChange(date)} // Update the field with the new Date
                                     showTimeSelect // Show time selection
@@ -108,7 +110,9 @@ export function ScheduleCreateForm() {
                                     dateFormat="MMMM d, yyyy h:mm aa" // Custom date-time format
                                     className="p-2 rounded-sm bg-transparent bg-neutral-700" // Tailwind styling for input// Custom styling
                                     placeholderText="Select date and time" // Placeholder text
-                                />
+                                    minDate={new Date()} // Ensure date is in the future
+                                /> */}
+                                <DateTimePicker onDateTimeChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -118,10 +122,10 @@ export function ScheduleCreateForm() {
                     control={form.control}
                     name="to_time"
                     render={({ field }) => (
-                        <FormItem className="flex gap-2 items-center ">
+                        <FormItem >
                             <FormLabel htmlFor="to_time">To Time</FormLabel>
                             <FormControl>
-                                <DatePicker
+                                {/* <DatePicker
                                     selected={field.value} // Pass the current Date value
                                     onChange={(date) => field.onChange(date)} // Update the field with the new Date
                                     showTimeSelect // Show time selection
@@ -130,7 +134,9 @@ export function ScheduleCreateForm() {
                                     dateFormat="MMMM d, yyyy h:mm aa" // Custom date-time format
                                     className="p-2 rounded-sm bg-transparent bg-neutral-700" // Tailwind styling for input// Custom styling
                                     placeholderText="Select date and time" // Placeholder text
-                                />
+                                    minDate={new Date()} // Ensure date is in the future
+                                /> */}
+                                <DateTimePicker onDateTimeChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -138,11 +144,11 @@ export function ScheduleCreateForm() {
                 />
 
 
-                <Button type="submit" variant='default' className='w-full'>
+                <Button type="submit" variant="default" className='w-auto h-10 '>
                     <span>Create Schedule</span>
                     <span className={`ml-6 mt-1 ${isSubmitting || 'hidden'}`}>
                         <ClipLoader
-                            color='black'
+                            color='white'
                             aria-label="Loading Spinner"
                             data-testid="loader"
                             size={16}

@@ -43,7 +43,7 @@ const profileCreateFormSchema = z.object({
     email: z.string()
         .email("Invalid email format"),
 
-    role: z.enum(["Patient", "Doctor", "Staff"]),
+    role: z.enum(["Patient", "Doctor", "Staff", "Operator"]),
 
     first_name: z.string()
         .min(1, "First name is required")
@@ -86,7 +86,9 @@ export function ProfileCreationForm({ userEmail }: { userEmail: string}) {
             if (profileRes.role === 'Patient')
                 router.push('/patient/register')
             else if (profileRes.role === 'Doctor') 
-                router.push('/doctor/profile/created') 
+                router.push('/doctor/profile/created')
+            else if (profileRes.role === 'Operator')
+                router.push('/operator/register')
         }
         setIsSubmitting(false)
     }
@@ -129,6 +131,7 @@ export function ProfileCreationForm({ userEmail }: { userEmail: string}) {
                                             <DropdownMenuRadioItem value="Patient">Patient</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="Doctor">Doctor</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="Staff">Staff</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="Operator">Operator</DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuContent>
                                 </DropdownMenu>

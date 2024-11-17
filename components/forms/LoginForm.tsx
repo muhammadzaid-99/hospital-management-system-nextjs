@@ -62,7 +62,7 @@ export function LoginForm() {
             if (profileRole === 'Patient') {
                 const patient = await isPatientRegistered()
                 if (patient)
-                    router.push('/rooms')
+                    router.push('/patient/dashboard')
                 else
                     router.push('/patient/register')
             } else if (profileRole === 'Doctor') {
@@ -74,10 +74,9 @@ export function LoginForm() {
             } else {
                 router.push('/profile/create')
             }
-        }
-        setInterval(() => {
+        } else {
             setIsSubmitting(false)
-        }, 3000)
+        }
     }
     const [isSubmitting, setIsSubmitting] = useState(false)
 
