@@ -42,9 +42,12 @@ export async function getDoctors(date: Date) {
                 // @ts-ignore
                 full_name: `${doctor.doctors.profiles.first_name} ${doctor.doctors.profiles.last_name}`
             }));
+            const uniqueDoctors = formattedDoctors.filter((doctor, index, self) =>
+                index === self.findIndex((d) => d.id === doctor.id)
+            );
 
-            console.log(formattedDoctors)
-            return formattedDoctors
+            console.log(uniqueDoctors)
+            return uniqueDoctors
         }
         console.log(error)
     }

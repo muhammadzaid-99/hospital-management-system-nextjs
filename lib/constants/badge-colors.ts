@@ -1,3 +1,4 @@
+'use client'
 export type AppointmentStatus = 'Pending' | 'Completed' | 'Cancelled' | 'Postponed' | 'Confirmed';
 
 export const statusColors: Record<AppointmentStatus, string> = {

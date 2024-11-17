@@ -24,6 +24,7 @@ import { MultiSelectItem } from '@/components/custom/FancyMultiSelect' // type
 import { Medicine, MedicineColumns } from "@/components/custom/columns" // type
 import { SelectedMedicines } from "@/components/custom/SelectedMedicines" // component
 import { SelectedMedicineTableDataType } from "@/components/custom/SelectedMedicines"
+import { useToast } from "@/hooks/use-toast"
 
 const prescriptionSchema = z.object({
     diagnosis: z.string().min(1, "Diagnosis is required"),
@@ -56,6 +57,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
     const [availableMedsCount, setAvailableMedsCount] = useState(0);
     const [queriedMedications, setQueriedMedications] = useState<MultiSelectItem[]>([])
     const [selectedMedications, setSelectedMedications] = useState<MultiSelectItem[]>([]);
+    const { toast } = useToast()
 
     async function searchMedications(query: string) {
         const meds = await getMedications(query)
@@ -142,10 +144,15 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
         const appCreate = await submitCheckup(data)
         console.log('Form Data:', Object.fromEntries(data.entries()));
         if (appCreate) {
-            alert('created')
-            // alertNewAppointment()
+            toast({
+                title: "Submitted",
+                description: "The checkup has been submitted successfully.",
+            })
         } else {
-            alert('failed')
+            toast({
+                title: "Failed",
+                description: "The checkup submission failed.",
+            })
         }
 
         setIsSubmitting(false)
@@ -279,7 +286,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                     <span>Submit Checkup</span>
                     <span className={`ml-6 mt-1 ${form.formState.isSubmitting || 'hidden'}`}>
                         <ClipLoader
-                            color='black'
+                            color='white'
                             aria-label="Loading Spinner"
                             data-testid="loader"
                             size={16}

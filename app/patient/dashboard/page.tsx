@@ -26,6 +26,7 @@ import { DataTable } from "@/components/custom/data-table"
 import { CheckupsColumns } from '@/components/custom/columns'
 import { PatientAppointmentColumns } from '@/components/custom/columns'
 import { RectangleEllipsis } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 
 export interface doctorInterface {
@@ -43,7 +44,7 @@ export interface PatientAppointmentInterface {
 
 const PatientDashboard = () => {
 
-  
+
     const [appointments, setAppointments] = useState<PatientAppointmentInterface[]>([])
     const [checkups, setCheckups] = useState<CheckupType[]>([])
     const [newAppointmentCreated, setNewAppointmentCreated] = useState(0)
@@ -51,8 +52,13 @@ const PatientDashboard = () => {
         const tab = localStorage.getItem('patientTabSelected')
         return tab ?? 'appointments'
     })
+    const { toast } = useToast()
 
-    function alterNewAppointment() {
+    function alertNewAppointment() {
+        toast({
+            title: "Created",
+            description: "The new appointment has been created successfully.",
+        })
         setNewAppointmentCreated((newAppointmentCreated) => newAppointmentCreated + 1)
     }
 
@@ -100,7 +106,7 @@ const PatientDashboard = () => {
                     <TabsContent value="appointments">
                         <div className="m-2">
                             <h1 className='font-bold text-xl'>Appointments</h1>
-                            <p className='text-gray-600 text-sm'>Here you can view existing and create new appointments.</p>
+                            <p className='text-gray-600 text-sm'>Here you can view existing and create new appointments. <span className='underline cursor-pointer' onClick={() => setNewAppointmentCreated(prev => prev + 1)}>Refresh</span></p>
                         </div>
                         <div className='grid grid-cols-2 gap-4'>
                             <div className='rounded-sm p-2 flex flex-col gap-2 select-none'>
@@ -132,7 +138,7 @@ const PatientDashboard = () => {
                                 {/* <Button variant='default' className='w-full'>View Schedules</Button> */}
                             </div>
                             <div>
-                                <AppointmentCreateForm alertNewAppointment={alterNewAppointment} />
+                                <AppointmentCreateForm alertNewAppointment={alertNewAppointment} />
                             </div>
                         </div>
                     </TabsContent>

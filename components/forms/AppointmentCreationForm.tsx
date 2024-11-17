@@ -39,6 +39,7 @@ import { createSchedule } from "@/lib/actions/doctor.actions"
 import { useEffect, useState } from "react"
 import { doctorInterface } from "@/app/patient/dashboard/page"
 import { createAppointment, getDoctors } from "@/lib/actions/patient.actions"
+import { useToast } from "@/hooks/use-toast"
 
 const schema = z.object({
     doctor_id: z.number().int().min(1, "Doctor ID must be a positive integer"),
@@ -74,7 +75,10 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
             // alert('created')
             alertNewAppointment()
         } else {
-            alert('failed')
+            toast({
+                title: "Failed",
+                description: "The appointment could not be created. Please try again.",
+            })
         }
 
         setIsSubmitting(false)
@@ -85,6 +89,7 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
     const [doctorSelectChange, setDoctorSelectChange] = useState(0)
     const [doctors, setDoctors] = useState<doctorInterface[]>([])
     const [isSearchingDoctors, setIsSearchingDoctors] = useState(false)
+    const { toast } = useToast()
 
     useEffect(() => {
         async function loadDoctors() {
@@ -142,12 +147,23 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                             <FormControl>
                                 <DropdownMenu {...field}>
                                     <DropdownMenuTrigger asChild className="w-56">
-                                        <Button variant="outline">{doctors.find(doctor => doctor.id === field.value)?.full_name || "Not Selected"}</Button>
+                                        <Button variant="outline">
+                                            {doctors.find(doctor => doctor.id === field.value)?.full_name || "Not Selected"}
+                                            {isSearchingDoctors && (
+                                                <ClipLoader
+                                                    color='black'
+                                                    aria-label="Loading Spinner"
+                                                    data-testid="loader"
+                                                    size={16}
+                                                    className="ml-2"
+                                                />
+                                            )}
+                                        </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56">
                                         <DropdownMenuLabel>Doctors</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => {field.onChange(Number(value)); setDoctorSelectChange(prev => prev + 1)}}>
+                                        <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => { field.onChange(Number(value)); setDoctorSelectChange(prev => prev + 1) }}>
                                             {doctors.length ? (
                                                 doctors.map((doctor) => (
                                                     <DropdownMenuRadioItem value={doctor.id}>{doctor.full_name}</DropdownMenuRadioItem>
@@ -155,14 +171,14 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                                             ) : (
                                                 isSearchingDoctors ? (
                                                     <div className="m-3">
-                                                        <ClipLoader
+                                                        {/* <ClipLoader
                                                             color='black'
                                                             // loading={}
                                                             // cssOverride={}
                                                             aria-label="Loading Spinner"
                                                             data-testid="loader"
                                                             size={16}
-                                                        />
+                                                        /> */}
                                                         <p className="text-xs mt-4">Searching for available doctors</p>
                                                     </div>
                                                 ) : (
@@ -224,11 +240,11 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                     )}
                 />
 
-                <Button type="submit" variant='default' className='w-full'>
+                <Button type="submit" variant='default' className='w-auto'>
                     <span>Create Appointment</span>
                     <span className={`ml-6 mt-1 ${form.formState.isSubmitting || 'hidden'}`}>
                         <ClipLoader
-                            color='black'
+                            color='white'
                             aria-label="Loading Spinner"
                             data-testid="loader"
                             size={16}

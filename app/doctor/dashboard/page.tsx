@@ -61,8 +61,20 @@ import { ChevronDown, ChevronsDown, ChevronUp } from 'lucide-react'
 import { Filter } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { statusColors, AppointmentStatus } from '@/lib/constants/badge-colors'
+import { useToast } from '@/hooks/use-toast'
 
+// this is not working
+// import { statusColors, AppointmentStatus } from '@/lib/constants/badge-colors'
+
+export type AppointmentStatus = 'Pending' | 'Completed' | 'Cancelled' | 'Postponed' | 'Confirmed';
+
+export const statusColors: Record<AppointmentStatus, string> = {
+    Pending: "bg-yellow-100 hover:bg-yellow-100 text-yellow-800 hover:bg-opacity-70",
+    Completed: "bg-green-100 hover:bg-green-100 text-green-800 hover:bg-opacity-70",
+    Cancelled: "bg-red-100 hover:bg-red-100 text-red-800 hover:bg-opacity-70",
+    Postponed: "bg-sky-100 hover:bg-sky-100 text-sky-800 hover:bg-opacity-70",
+    Confirmed: "bg-blue-100 hover:bg-blue-100 text-blue-800 hover:bg-opacity-70",
+};
 
 interface scheduleInterface {
     id: string,
@@ -94,6 +106,8 @@ const DoctorDashboard = () => {
     const [appointmentActionDate, setAppointmentActionDate] = useState<Date | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [patientDetailsOpen, setPatientDetailsOpen] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+
     const [scheduleFilter, setScheduleFilter] = useState<string>(() => {
         const scheduleFilterLS = localStorage.getItem('scheduleFilter');
         return scheduleFilterLS ?? 'today';
@@ -111,6 +125,7 @@ const DoctorDashboard = () => {
         return tab ?? 'schedules'
     })
     // const [patientDetails, setPatientDetails] = useState<any>(undefined);
+    const { toast } = useToast();
 
     async function handleConfirmAppointmentClick() {
         setIsSubmitting(true);
@@ -119,13 +134,22 @@ const DoctorDashboard = () => {
             const updatedAppointment = { id: selectedAppointment.appointment_id, status: 'Confirmed', appointment_date: appointmentActionDate.toISOString() }
             const res = await updateAppointmentStatus(updatedAppointment)
             if (res) {
-                alert(`Appointment confirmed for ${appointmentActionDate}`)
+                toast({
+                    title: "Confirmed",
+                    description: `The appointment has been confirmed for ${appointmentActionDate.toLocaleString()}.`,
+                })
                 setSelectedAppointment(undefined)
             } else {
-                alert("An error occured.")
+                toast({
+                    title: "Error",
+                    description: "An error occurred while confirming the appointment.",
+                })
             }
         } else {
-            alert('Please select a date and time for the appointment')
+            toast({
+                title: "Error",
+                description: "Please select a date and time for the appointment.",
+            })
         }
         setAppointmentActionDate(null)
         setIsSubmitting(false);
@@ -138,11 +162,17 @@ const DoctorDashboard = () => {
             const updatedAppointment = { id: selectedAppointment.appointment_id, status: 'Cancelled', appointment_date: selectedAppointment.appointment_date }
             const res = await updateAppointmentStatus(updatedAppointment)
             if (res) {
-                alert('Appointment cancelled!')
+                toast({
+                    title: "Cancelled",
+                    description: "The appointment has been cancelled successfully.",
+                })
                 setSelectedAppointment(undefined)
 
             } else {
-                alert('An error occured.')
+                toast({
+                    title: "Error",
+                    description: "An error occurred while cancelling the appointment.",
+                })
             }
         }
         setIsSubmitting(false);
@@ -155,11 +185,17 @@ const DoctorDashboard = () => {
             const updatedAppointment = { id: selectedAppointment.appointment_id, status: 'Postponed', appointment_date: selectedAppointment.appointment_date }
             const res = await updateAppointmentStatus(updatedAppointment)
             if (res) {
-                alert('Appointment postponed!')
+                toast({
+                    title: "Postponed",
+                    description: "The appointment has been postponed successfully.",
+                })
                 setSelectedAppointment(undefined)
 
             } else {
-                alert('An error occured.')
+                toast({
+                    title: "Error",
+                    description: "An error occurred while postponing the appointment.",
+                })
             }
         }
         setIsSubmitting(false);
@@ -171,15 +207,27 @@ const DoctorDashboard = () => {
         const deletedSchedule = await deleteSchedule(schedule_id)
 
         if (deletedSchedule) {
-            alert('Schedule deleted successfully.')
+            toast({
+                title: "Deleted",
+                description: "The schedule has been deleted successfully.",
+            })
+
             setNewScheduleCreated((newScheduleCreated) => newScheduleCreated - 1)
         } else {
-            alert('An error occured.')
+            toast({
+                title: "Error",
+                description: "An error occurred while deleting the schedule.",
+            })
         }
         setIsSubmitting(false)
     }
 
-    function alterNewSchedule() {
+    function alertNewSchedule() {
+        toast({
+            title: "Created",
+            description: "The schedule has been created successfully.",
+        })
+
         setNewScheduleCreated((newScheduleCreated) => newScheduleCreated + 1)
     }
 
@@ -242,10 +290,12 @@ const DoctorDashboard = () => {
     useEffect(() => {
         async function loadAppointments() {
             if (isSubmitting) return;
+            setIsSearching(true)
             const { fromDateStart, fromDateEnd } = getDatesForFilter(appointmentsFilter)
-            const __appointments = await getDoctorAppointments( fromDateStart, fromDateEnd)
+            const __appointments = await getDoctorAppointments(fromDateStart, fromDateEnd)
             console.log(__appointments)
             setAppointments(__appointments)
+            setIsSearching(false)
         }
 
         loadAppointments()
@@ -255,10 +305,12 @@ const DoctorDashboard = () => {
     useEffect(() => {
         async function loadData() {
             setSchedules([])
+            setIsSearching(true)
             const { fromDateStart, fromDateEnd } = getDatesForFilter(scheduleFilter)
             console.log(fromDateStart, fromDateEnd)
             const __schedules = await getDoctorSchedules(fromDateStart, fromDateEnd)
             setSchedules(__schedules)
+            setIsSearching(false)
         }
 
         loadData()
@@ -371,7 +423,7 @@ const DoctorDashboard = () => {
                                                             {showEndTime && (
                                                                 <p className='flex gap-3 items-start flex-col'>
                                                                     <span className='text-neutral-600 text-xs w-32'>End Time</span>
-                                                                    {durationHours > 24 ? (
+                                                                    {durationHours > 23 ? (
                                                                         <span className='font-medium text-lg'> {toDate.toLocaleString()}</span>
                                                                     ) : (
                                                                         <span className='font-medium text-lg'> {toDate.toLocaleTimeString()}</span>
@@ -391,8 +443,13 @@ const DoctorDashboard = () => {
                                                 </Card>
                                             );
                                         })
-                                    ) : (
+                                    ) : (isSearching ? (
                                         <ClipLoader color='black' aria-label='Loading Spinner' data-testid='loader' className='m-3' />
+                                    ) : (
+                                        <p className='m-3'>
+                                            No schedules found for the selected filter.
+                                        </p>
+                                    )
                                     )}
                                 </div>
                             </ScrollArea>
@@ -401,7 +458,7 @@ const DoctorDashboard = () => {
                             {/* Schedule Creation Form Section */}
                             <div className=' ring-1 ring-neutral-200 to-transparent p-4 rounded-md shadow-sm'>
                                 <h3 className='text-black uppercase font-semibold mb-4'>Create New Schedule</h3>
-                                <ScheduleCreateForm alertNewSchedule={alterNewSchedule} />
+                                <ScheduleCreateForm alertNewSchedule={alertNewSchedule} />
                             </div>
                         </div>
 
@@ -467,7 +524,8 @@ const DoctorDashboard = () => {
                                                                         >
                                                                             <span>{app.patient_full_name}</span>
                                                                             <span>{fullDate.toDateString()}</span>
-                                                                            <span>{fullDate.toLocaleTimeString()}</span>
+                                                                            {['Confirm', 'Completed'].includes(app.status) && fullDate.toLocaleTimeString()}
+                                                                            {/* <span>{fullDate.toLocaleTimeString()}</span> */}
                                                                         </Card>
                                                                     </DialogTrigger>
 
@@ -479,7 +537,7 @@ const DoctorDashboard = () => {
                                                                                     {/* <span>{selectedAppointment.patient_full_name}</span> */}
                                                                                     {/* <span>{formattedDate}</span> */}
                                                                                     {/* <span>{formattedTime}</span> */}
-                                                                                    <span>{fullDate.toDateString()} @ {fullDate.toLocaleTimeString()} </span>
+                                                                                    <span>{fullDate.toDateString()}{['Confirm', 'Completed'].includes(selectedAppointment.status) && ' @ ' +  fullDate.toLocaleTimeString()} </span>
                                                                                     <span>{selectedAppointment.status}</span>
                                                                                 </DialogDescription>
                                                                             </DialogHeader>
@@ -592,8 +650,12 @@ const DoctorDashboard = () => {
                                                 </AccordionItem>
                                             ))}
                                         </Accordion>
-                                    ) : (
+                                    ) : (isSearching ? (
+
                                         <ClipLoader color="black" aria-label="Loading Spinner" data-testid="loader" className="m-3" />
+                                    ) : (
+                                        <p>No appointments found against this filter.</p>
+                                    )
                                     )}
                                 </div>
                                 <ScrollBar orientation="horizontal" className="bg-neutral-950" />

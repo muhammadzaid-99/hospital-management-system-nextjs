@@ -29,6 +29,8 @@ import ClipLoader from "react-spinners/ClipLoader"
 import { createSchedule } from "@/lib/actions/doctor.actions"
 import { useState } from "react"
 import { DateTimePicker } from "../custom/DateTimePicker"
+import { useToast } from "@/hooks/use-toast"
+
 
 
 const schema = z.object({
@@ -44,7 +46,7 @@ export function ScheduleCreateForm({ alertNewSchedule }: { alertNewSchedule: () 
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: {
-            expected_patients: 4,
+            // expected_patients: '',
             from_time: new Date(),
             to_time: new Date(new Date().getTime() + 60 * 60 * 1000), // One hour later
         }
@@ -64,13 +66,19 @@ export function ScheduleCreateForm({ alertNewSchedule }: { alertNewSchedule: () 
             alertNewSchedule()
             // alert('created')
         } else {
-            alert('failed')
+            toast({
+                title: "Schedule Creation Failed",
+                description: "Please try again.",
+              })
         }
 
         setIsSubmitting(false)
     }
 
+
+    const { toast } = useToast()
     const [isSubmitting, setIsSubmitting] = useState(false)
+
 
     return (
         <Form {...form}>
@@ -86,6 +94,7 @@ export function ScheduleCreateForm({ alertNewSchedule }: { alertNewSchedule: () 
                                     type="number"
                                     id="expected_patients"
                                     className="p-2 rounded-sm"
+                                    placeholder="10, 20, 30, etc."
                                     value={field.value ?? ""} // Ensure it handles undefined/null
                                     onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))} // Convert to number
                                 />
