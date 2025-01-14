@@ -49,6 +49,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+
+
 import { Badge } from "@/components/ui/badge"
 import { DateTimePicker } from '@/components/custom/DateTimePicker'
 import { Calendar } from '@/components/ui/calendar'
@@ -109,18 +123,22 @@ const DoctorDashboard = () => {
     const [isSearching, setIsSearching] = useState(false);
 
     const [scheduleFilter, setScheduleFilter] = useState<string>(() => {
+        return 'today'
         const scheduleFilterLS = localStorage.getItem('scheduleFilter');
         return scheduleFilterLS ?? 'today';
     });
     const [appointmentsFilter, setAppointmentsFilter] = useState<string>(() => {
+        return 'today'
         const appointmentsFilterLS = localStorage.getItem('appointmentsFilter');
         return appointmentsFilterLS ?? 'today';
     });
     const [showEndTime, setShowEndTime] = useState(() => {
+        return false
         const showEndTimeLS = localStorage.getItem('showEndTime');
         return showEndTimeLS === 'true';
     })
     const [doctorTabSelected, setDoctorTabSelected] = useState(() => {
+        return 'schedules'
         const tab = localStorage.getItem('doctorTabSelected')
         return tab ?? 'schedules'
     })
@@ -291,6 +309,7 @@ const DoctorDashboard = () => {
         async function loadAppointments() {
             if (isSubmitting) return;
             setIsSearching(true)
+            setAppointments([])
             const { fromDateStart, fromDateEnd } = getDatesForFilter(appointmentsFilter)
             const __appointments = await getDoctorAppointments(fromDateStart, fromDateEnd)
             console.log(__appointments)
@@ -317,19 +336,6 @@ const DoctorDashboard = () => {
         localStorage.setItem('scheduleFilter', scheduleFilter.toString())
     }, [newScheduleCreated, scheduleFilter])
 
-    // useEffect(() => {
-    //     async function loadPatientData() {
-    //         if (!selectedAppointment) return;
-    //         const __patientData = await getPatientDetails(selectedAppointment?.id)
-    //         setPatientDetails(__patientData)
-    //     }
-
-    //     if (patientDetailsOpen === true) {
-    //         loadPatientData()
-    //     } else {
-    //         setPatientDetails(undefined)
-    //     }
-    // }, [patientDetailsOpen])
 
     const groupedAppointments = appointments.reduce<Record<string, DoctorAppointmentInterface[]>>((acc, app) => {
         if (!acc[app.status]) acc[app.status] = [];
@@ -430,15 +436,27 @@ const DoctorDashboard = () => {
                                                                     )}
                                                                 </p>
                                                             )}
-                                                            {/* <p className='flex gap-3 items-start flex-col'>
-                                                                <span className='text-neutral-600 text-xs w-32'>End Date</span>
-                                                                <span className='font-medium text-lg'>{toDate.toLocaleTimeString()}</span>
-                                                            </p> */}
                                                         </div>
-                                                        <Button variant="secondary" className='hover:bg-red-200 hover:bg-opacity-20 hover:text-red-800 self-end disabled:opacity-0 opacity-0 group-hover/schedule_card:opacity-100 transition-all duration-300 group/button w-12 hover:w-24' onClick={() => handleDeleteScheduleButtonClick(schedule.id)} disabled={isSubmitting}>
-                                                            <TrashIcon className='inline-block group-hover/button:hidden' />
-                                                            <span className='ml-2 hidden group-hover/button:inline-block'>Delete</span>
-                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="secondary" className='hover:bg-red-200 hover:bg-opacity-20 hover:text-red-800 self-end disabled:opacity-0 opacity-0 group-hover/schedule_card:opacity-100 transition-all duration-300 group/button w-12 hover:w-24'  disabled={isSubmitting}>
+                                                                    <TrashIcon className='inline-block group-hover/button:hidden' />
+                                                                    <span className='ml-2 hidden group-hover/button:inline-block'>Delete</span>
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Confirm Schedule Deletion?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This action cannot be undone. This will permanently delete this schedule for {fullDate.toLocaleString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} and cancel all associated appointments. 
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction className=' hover:bg-red-600' onClick={() => handleDeleteScheduleButtonClick(schedule.id)} disabled={isSubmitting}>Continue</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     </div>
                                                 </Card>
                                             );
@@ -537,7 +555,7 @@ const DoctorDashboard = () => {
                                                                                     {/* <span>{selectedAppointment.patient_full_name}</span> */}
                                                                                     {/* <span>{formattedDate}</span> */}
                                                                                     {/* <span>{formattedTime}</span> */}
-                                                                                    <span>{fullDate.toDateString()}{['Confirm', 'Completed'].includes(selectedAppointment.status) && ' @ ' +  fullDate.toLocaleTimeString()} </span>
+                                                                                    <span>{fullDate.toDateString()}{['Confirm', 'Completed'].includes(selectedAppointment.status) && ' @ ' + fullDate.toLocaleTimeString()} </span>
                                                                                     <span>{selectedAppointment.status}</span>
                                                                                 </DialogDescription>
                                                                             </DialogHeader>

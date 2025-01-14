@@ -7,34 +7,101 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      appointment_slots: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: number
+          schedule_id: number | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: number
+          schedule_id?: number | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: number
+          schedule_id?: number | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_slots_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
-          appointment_date: string
-          doctor_id: number
+          appointment_date: string | null
+          appointment_slot_id: number | null
+          doctor_id: number | null
           id: number
           patient_id: number
           reason: string | null
           status: Database["public"]["Enums"]["appointment_status_enum"]
         }
         Insert: {
-          appointment_date: string
-          doctor_id: number
+          appointment_date?: string | null
+          appointment_slot_id?: number | null
+          doctor_id?: number | null
           id?: number
           patient_id: number
           reason?: string | null
           status: Database["public"]["Enums"]["appointment_status_enum"]
         }
         Update: {
-          appointment_date?: string
-          doctor_id?: number
+          appointment_date?: string | null
+          appointment_slot_id?: number | null
+          doctor_id?: number | null
           id?: number
           patient_id?: number
           reason?: string | null
           status?: Database["public"]["Enums"]["appointment_status_enum"]
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_appointment_slot_id_fkey"
+            columns: ["appointment_slot_id"]
+            isOneToOne: true
+            referencedRelation: "appointment_slots"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_appointments_doctor"
             columns: ["doctor_id"]
@@ -80,6 +147,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_status_log_appointment"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "doctors_appointments_with_patients"
+            referencedColumns: ["appointment_id"]
+          },
+          {
+            foreignKeyName: "fk_appointments_status_log_appointment"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "doctors_appointments_with_patients_inslot"
+            referencedColumns: ["appointment_id"]
           },
           {
             foreignKeyName: "fk_appointments_status_log_operator"
@@ -257,52 +338,56 @@ export type Database = {
       }
       checkups: {
         Row: {
+          appointment_id: number
           diagnosis: string
-          doctor_id: number
           id: number
           notes: string | null
-          patient_id: number
-          prescription_id: number
+          prescription_id: number | null
           service_id: number
           treatment: string
           visit_date: string
         }
         Insert: {
+          appointment_id: number
           diagnosis: string
-          doctor_id: number
           id?: number
           notes?: string | null
-          patient_id: number
-          prescription_id: number
+          prescription_id?: number | null
           service_id: number
           treatment: string
           visit_date: string
         }
         Update: {
+          appointment_id?: number
           diagnosis?: string
-          doctor_id?: number
           id?: number
           notes?: string | null
-          patient_id?: number
-          prescription_id?: number
+          prescription_id?: number | null
           service_id?: number
           treatment?: string
           visit_date?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_checkups_doctor"
-            columns: ["doctor_id"]
+            foreignKeyName: "checkups_appointment_id_fkey"
+            columns: ["appointment_id"]
             isOneToOne: false
-            referencedRelation: "doctors"
+            referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_checkups_patient"
-            columns: ["patient_id"]
+            foreignKeyName: "checkups_appointment_id_fkey"
+            columns: ["appointment_id"]
             isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
+            referencedRelation: "doctors_appointments_with_patients"
+            referencedColumns: ["appointment_id"]
+          },
+          {
+            foreignKeyName: "checkups_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "doctors_appointments_with_patients_inslot"
+            referencedColumns: ["appointment_id"]
           },
           {
             foreignKeyName: "fk_checkups_prescription"
@@ -441,23 +526,23 @@ export type Database = {
         Row: {
           doctor_id: number
           expected_patients: number
-          from: string
+          from_time: string | null
           id: number
-          to: string
+          to_time: string | null
         }
         Insert: {
           doctor_id: number
           expected_patients: number
-          from: string
+          from_time?: string | null
           id?: number
-          to: string
+          to_time?: string | null
         }
         Update: {
           doctor_id?: number
           expected_patients?: number
-          from?: string
+          from_time?: string | null
           id?: number
-          to?: string
+          to_time?: string | null
         }
         Relationships: [
           {
@@ -471,7 +556,7 @@ export type Database = {
       }
       doctors: {
         Row: {
-          department_id: number
+          department_id: number | null
           id: number
           join_date: string
           license_number: string
@@ -479,7 +564,7 @@ export type Database = {
           user_id: number
         }
         Insert: {
-          department_id: number
+          department_id?: number | null
           id?: number
           join_date?: string
           license_number: string
@@ -487,7 +572,7 @@ export type Database = {
           user_id: number
         }
         Update: {
-          department_id?: number
+          department_id?: number | null
           id?: number
           join_date?: string
           license_number?: string
@@ -499,7 +584,7 @@ export type Database = {
             foreignKeyName: "fk_doctors_user"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -648,37 +733,37 @@ export type Database = {
       }
       medication: {
         Row: {
-          administer_route: string
-          dosage: number
+          administer_route: string | null
+          dosage: string
           drug_id: number
           duration_in_days: number
-          frequency_daily: number
+          frequency_daily: number | null
           guidelines: string | null
           id: number
           prescription_id: number
-          quantity: number
+          quantity: number | null
         }
         Insert: {
-          administer_route: string
-          dosage: number
+          administer_route?: string | null
+          dosage: string
           drug_id: number
           duration_in_days: number
-          frequency_daily: number
+          frequency_daily?: number | null
           guidelines?: string | null
           id?: number
           prescription_id: number
-          quantity: number
+          quantity?: number | null
         }
         Update: {
-          administer_route?: string
-          dosage?: number
+          administer_route?: string | null
+          dosage?: string
           drug_id?: number
           duration_in_days?: number
-          frequency_daily?: number
+          frequency_daily?: number | null
           guidelines?: string | null
           id?: number
           prescription_id?: number
-          quantity?: number
+          quantity?: number | null
         }
         Relationships: [
           {
@@ -724,7 +809,7 @@ export type Database = {
             foreignKeyName: "fk_operators_user"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -737,7 +822,6 @@ export type Database = {
           disability: string | null
           emergency_contact: string
           family_history: string | null
-          gender: Database["public"]["Enums"]["gender_enum"]
           id: number
           medical_history: string | null
           registration_date: string
@@ -750,7 +834,6 @@ export type Database = {
           disability?: string | null
           emergency_contact: string
           family_history?: string | null
-          gender: Database["public"]["Enums"]["gender_enum"]
           id?: number
           medical_history?: string | null
           registration_date?: string
@@ -763,7 +846,6 @@ export type Database = {
           disability?: string | null
           emergency_contact?: string
           family_history?: string | null
-          gender?: Database["public"]["Enums"]["gender_enum"]
           id?: number
           medical_history?: string | null
           registration_date?: string
@@ -774,7 +856,7 @@ export type Database = {
             foreignKeyName: "fk_patients_user"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -800,6 +882,36 @@ export type Database = {
           prescription_date?: string
           status?: Database["public"]["Enums"]["prescription_status_enum"]
           validity?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          auth_uid: string
+          first_name: string
+          gender: Database["public"]["Enums"]["gender_enum"]
+          id: number
+          last_name: string
+          register_token: string | null
+          role: string
+        }
+        Insert: {
+          auth_uid: string
+          first_name: string
+          gender: Database["public"]["Enums"]["gender_enum"]
+          id?: number
+          last_name: string
+          register_token?: string | null
+          role: string
+        }
+        Update: {
+          auth_uid?: string
+          first_name?: string
+          gender?: Database["public"]["Enums"]["gender_enum"]
+          id?: number
+          last_name?: string
+          register_token?: string | null
+          role?: string
         }
         Relationships: []
       }
@@ -933,7 +1045,7 @@ export type Database = {
             foreignKeyName: "fk_staff_user"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1049,41 +1161,6 @@ export type Database = {
           },
         ]
       }
-      users: {
-        Row: {
-          auth_uid: string
-          first_name: string
-          gender: Database["public"]["Enums"]["gender_enum"]
-          id: number
-          last_name: string
-          role: string
-        }
-        Insert: {
-          auth_uid: string
-          first_name: string
-          gender: Database["public"]["Enums"]["gender_enum"]
-          id?: number
-          last_name: string
-          role: string
-        }
-        Update: {
-          auth_uid?: string
-          first_name?: string
-          gender?: Database["public"]["Enums"]["gender_enum"]
-          id?: number
-          last_name?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "users_auth_uid_fkey"
-            columns: ["auth_uid"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       walk_in_patients: {
         Row: {
           age: number
@@ -1146,7 +1223,71 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      doctors_appointments_with_patients: {
+        Row: {
+          allergies: string | null
+          appointment_date: string | null
+          appointment_id: number | null
+          auth_uid: string | null
+          date_of_birth: string | null
+          disability: string | null
+          family_history: string | null
+          medical_history: string | null
+          patient_full_name: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["appointment_status_enum"] | null
+        }
+        Relationships: []
+      }
+      doctors_appointments_with_patients_inslot: {
+        Row: {
+          allergies: string | null
+          appointment_date: string | null
+          appointment_id: number | null
+          appointment_slot_id: number | null
+          auth_uid: string | null
+          date_of_birth: string | null
+          disability: string | null
+          end_time: string | null
+          family_history: string | null
+          medical_history: string | null
+          patient_full_name: string | null
+          reason: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["appointment_status_enum"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_appointment_slot_id_fkey"
+            columns: ["appointment_slot_id"]
+            isOneToOne: true
+            referencedRelation: "appointment_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_appointments_with_doctors: {
+        Row: {
+          appointment_date: string | null
+          auth_uid: string | null
+          doctor_full_name: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["appointment_status_enum"] | null
+        }
+        Relationships: []
+      }
+      patient_appointments_with_doctors_inslot: {
+        Row: {
+          appointment_date: string | null
+          auth_uid: string | null
+          doctor_full_name: string | null
+          end_time: string | null
+          reason: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["appointment_status_enum"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
@@ -1252,4 +1393,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

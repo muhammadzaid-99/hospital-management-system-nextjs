@@ -68,7 +68,7 @@ export function LoginForm() {
             } else if (profileRole === 'Doctor') {
                 const doctor = await isDoctorRegistered()
                 if (doctor)
-                    router.push('/doctor/dashboard')
+                    router.push('/doctor/dashboard-new')
                 else
                     router.push('/doctor/profile/created')
             } else {

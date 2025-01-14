@@ -21,7 +21,7 @@ export async function getDoctorSchedules(fromDateStart: Date, fromDateEnd: Date)
             .from('profiles')
             .select(`
             auth_uid,
-            doctors ( doctor_schedules (id, expected_patients, from_time, to_time) )
+            doctors ( doctor_schedules (id, expected_patients, from_time, to_time)))
         `)
             .eq('auth_uid', userData.user.id)
             .gte('doctors.doctor_schedules.from_time', fromDateStart.toISOString())
@@ -34,7 +34,38 @@ export async function getDoctorSchedules(fromDateStart: Date, fromDateEnd: Date)
             // @ts-ignore
             const cleanedSchedules = schedules.map(({ auth_uid, doctors }) => doctors.doctor_schedules)[0];
             cleanedSchedules.sort((a:any, b:any) => new Date(b.from_time).getTime() - new Date(a.from_time).getTime());
-            console.log(cleanedSchedules)
+            console.log(cleanedSchedules[0])
+
+            if (!error && cleanedSchedules)
+                return cleanedSchedules
+        }
+    }
+    return []
+}
+
+export async function getDoctorSchedules_v2(fromDateStart: Date, fromDateEnd: Date) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    console.log(fromDateStart, fromDateEnd)
+
+    // assuming hours for fromDateStart and fromDateEnd are correct from calling section
+    if (userData.user) {
+        const { data: schedules, error } = await supabase
+            .from('view_doctor_schedules')
+            .select('*')
+            .eq('auth_uid', userData.user.id)
+            .gte('from_time', fromDateStart.toISOString())
+            .lte('from_time', fromDateEnd.toISOString())
+
+            // console.log(schedules)
+            
+            if (schedules) {
+                // Create a new array with the 'doctors' field removed
+                // @ts-ignore
+                const cleanedSchedules = schedules.map(({ auth_uid, ...rest }) => rest);
+                cleanedSchedules.sort((a:any, b:any) => new Date(b.from_time).getTime() - new Date(a.from_time).getTime());
+            // console.log(cleanedSchedules[0])
 
             if (!error && cleanedSchedules)
                 return cleanedSchedules
@@ -135,6 +166,78 @@ export async function getDoctorAppointments(fromDateStart: Date, fromDateEnd: Da
                 return cleanedAppointments
         }
     }
+    return []
+}
+
+export async function getDoctorAppointmentsInSlot(fromDateStart: Date, fromDateEnd: Date) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        const { data: appointments, error } = await supabase
+            .from('doctors_appointments_with_patients_inslot')
+            .select('*')
+            .eq('auth_uid', userData.user.id)
+            .gte('appointment_date', fromDateStart.toISOString())
+            .lte('appointment_date', fromDateEnd.toISOString())
+
+        // console.log(appointments)
+
+        if (appointments) {
+            // Create a new array with the 'doctors' field removed
+            // @ts-ignore
+            const cleanedAppointments = appointments.map(({ auth_uid, ...rest }) => rest);
+            // console.log(cleanedAppointments)
+
+            if (!error && cleanedAppointments)
+                return cleanedAppointments
+        }
+    }
+    return []
+}
+
+export async function getAppointmentSlotsForDoctor(date: Date) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        const { data: slotsData, error } = await supabase
+        .from('profiles')
+        .select('doctors(doctor_schedules (from_time, to_time, appointment_slots(start_time, end_time, schedule_id, id, appointments(id))))')
+        .eq('auth_uid', userData.user.id)
+        .gte('doctors.doctor_schedules.from_time', (new Date(date.setHours(0, 0, 0, 1))).toISOString())
+        // here we suppose date means all slots on and after date
+        // .lte('doctors.doctor_schedules.from_time', (new Date(date.setHours(23, 59, 59, 999))).toISOString())
+        .limit(1, {referencedTable: 'doctors'})
+        .single()
+        
+
+        if (!error) {
+            if (!slotsData.doctors) return []
+            const slots = slotsData.doctors.doctor_schedules
+            // const slots = slotsData.doctors.doctor_schedules
+            const formattedSlots = slots.flatMap(slot => {
+                return slot.appointment_slots;
+            });
+
+            const availableSlots = formattedSlots.filter(s => s.appointments === null)
+
+            const availableSlotsWithTime = availableSlots.map(slot => {
+                const { start_time, end_time, schedule_id, id } = slot;
+                return {
+                    schedule_id, id,
+                    start_time: new Date(start_time),
+                    end_time: new Date(end_time)
+                };
+            })
+            availableSlotsWithTime.sort((a, b) => a.start_time.getTime() - b.start_time.getTime());
+
+            // console.log(availableSlotsWithTime)
+            return availableSlotsWithTime.slice(0, 50) // first 50 only
+        }
+        console.log(error)
+    }
+
     return []
 }
 
@@ -277,10 +380,13 @@ export async function updateAppointmentStatus(appointment: any) {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
 
+
+    // here i expect a bug because appointment date can be sent different from respective slot id by client
     if (userData.user) {
+        // another bug is here because i am not checking if the appointment is for this doctor or not
         const { data, error } = await supabase
             .from('appointments')
-            .update({ status: appointment.status, appointment_date: appointment.appointment_date })
+            .update({ status: appointment.status, appointment_slot_id: appointment.appointment_slot_id })
             .eq('id', appointment.id)
 
         if (error) {

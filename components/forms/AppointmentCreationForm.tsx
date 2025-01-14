@@ -38,11 +38,19 @@ import ClipLoader from "react-spinners/ClipLoader"
 import { createSchedule } from "@/lib/actions/doctor.actions"
 import { useEffect, useState } from "react"
 import { doctorInterface } from "@/app/patient/dashboard/page"
-import { createAppointment, getDoctors } from "@/lib/actions/patient.actions"
+import { createAppointment, createAppointmentInSlot, getAppointments, getAppointmentSlots, getDoctors } from "@/lib/actions/patient.actions"
 import { useToast } from "@/hooks/use-toast"
+
+interface AppointmentSlot {
+    id: any;
+    schedule_id: any;
+    start_time: Date;
+    end_time: Date;
+}
 
 const schema = z.object({
     doctor_id: z.number().int().min(1, "Doctor ID must be a positive integer"),
+    appointment_slot_id: z.number().int().min(1, "Appointment slot ID must be a positive integer"),
     appointment_date: z.date().min(new Date(), "Appointment date must be in the future"),
     status: z.enum(["Pending", "Confirmed", "Cancelled", "Completed", "Postponed"]),
     reason: z.string().min(1, "Reason is required"),
@@ -53,6 +61,7 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
         resolver: zodResolver(schema),
         defaultValues: {
             doctor_id: Number(-1), // default doctor ID, can be dynamically set based on your data
+            appointment_slot_id: Number(-1), // default slot ID, can be dynamically set based on your data
             appointment_date: new Date(), // current date
             status: "Pending", // initial status
             reason: "", // leave empty initially
@@ -63,14 +72,17 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
     const onSubmit = async (values: z.infer<typeof schema>) => {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
+        values.appointment_date.setHours(0, 0, 0, 0)
         setIsSubmitting(true)
         const data = new FormData()
         data.append('doctor_id', values.doctor_id.toString())
         data.append('appointment_date', values.appointment_date.toISOString())
         data.append('status', values.status)
         data.append('reason', values.reason)
+        data.append('appointment_slot_id', values.appointment_slot_id.toString())
 
-        const appCreate = await createAppointment(data)
+        // const appCreate = await createAppointment(data)
+        const appCreate = await createAppointmentInSlot(data)
         if (appCreate) {
             // alert('created')
             alertNewAppointment()
@@ -88,7 +100,9 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
     const [appDateChange, setAppDateChange] = useState(0)
     const [doctorSelectChange, setDoctorSelectChange] = useState(0)
     const [doctors, setDoctors] = useState<doctorInterface[]>([])
+    const [appointmentSlots, setAppointmentSlots] = useState<AppointmentSlot[]>([])
     const [isSearchingDoctors, setIsSearchingDoctors] = useState(false)
+    const [isSearchingSlots, setIsSearchingSlots] = useState(false)
     const { toast } = useToast()
 
     useEffect(() => {
@@ -98,21 +112,29 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
             const date = new Date(form.getValues('appointment_date'))
             const __doctors = await getDoctors(date)
             setDoctors(__doctors)
+            setDoctorSelectChange(-1)
             setIsSearchingDoctors(false)
+            console.log(__doctors)
         }
 
         loadDoctors()
     }, [appDateChange])
 
-    // useEffect(() => {
-    //     async function checkDocAvailable() {
-    //         const doc_id = form.getValues('doctor_id')
 
+    useEffect(() => {
+        async function loadSlots() {
+            setIsSearchingSlots(true)
+            setAppointmentSlots([])
+            const date = new Date(form.getValues('appointment_date'))
+            const doc_id = form.getValues('doctor_id')
+            const slots = await getAppointmentSlots(doc_id.toString(), date)
+            setAppointmentSlots(slots)
+            setIsSearchingSlots(false)
+        }
 
-    //     }
-
-    //     checkDocAvailable()
-    // }, [doctorSelectChange])
+        loadSlots()
+        console.log(appointmentSlots)
+    }, [doctorSelectChange])
 
 
     return (
@@ -138,40 +160,42 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="doctor_id"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col w-auto items-start">
-                            <FormLabel>Select Doctor</FormLabel>
-                            <FormControl>
-                                <DropdownMenu {...field}>
-                                    <DropdownMenuTrigger asChild className="w-56">
-                                        <Button variant="outline">
-                                            {doctors.find(doctor => doctor.id === field.value)?.full_name || "Not Selected"}
-                                            {isSearchingDoctors && (
-                                                <ClipLoader
-                                                    color='black'
-                                                    aria-label="Loading Spinner"
-                                                    data-testid="loader"
-                                                    size={16}
-                                                    className="ml-2"
-                                                />
-                                            )}
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-56">
-                                        <DropdownMenuLabel>Doctors</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => { field.onChange(Number(value)); setDoctorSelectChange(prev => prev + 1) }}>
-                                            {doctors.length ? (
-                                                doctors.map((doctor) => (
-                                                    <DropdownMenuRadioItem value={doctor.id}>{doctor.full_name}</DropdownMenuRadioItem>
-                                                ))
-                                            ) : (
-                                                isSearchingDoctors ? (
-                                                    <div className="m-3">
-                                                        {/* <ClipLoader
+
+                <div className="flex gap-2 items-end">
+                    <FormField
+                        control={form.control}
+                        name="doctor_id"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col w-auto items-start">
+                                <FormLabel>Select Doctor</FormLabel>
+                                <FormControl>
+                                    <DropdownMenu {...field}>
+                                        <DropdownMenuTrigger asChild className="w-56">
+                                            <Button variant="outline">
+                                                {doctors.find(doctor => doctor.id === field.value)?.full_name || "Not Selected"}
+                                                {isSearchingDoctors && (
+                                                    <ClipLoader
+                                                        color='black'
+                                                        aria-label="Loading Spinner"
+                                                        data-testid="loader"
+                                                        size={16}
+                                                        className="ml-2"
+                                                    />
+                                                )}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                            <DropdownMenuLabel>Doctors</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => { field.onChange(Number(value)); setDoctorSelectChange(prev => prev + 1) }}>
+                                                {doctors.length ? (
+                                                    doctors.map((doctor) => (
+                                                        <DropdownMenuRadioItem value={doctor.id}>{doctor.full_name}</DropdownMenuRadioItem>
+                                                    ))
+                                                ) : (
+                                                    isSearchingDoctors ? (
+                                                        <div className="m-3">
+                                                            {/* <ClipLoader
                                                             color='black'
                                                             // loading={}
                                                             // cssOverride={}
@@ -179,20 +203,65 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                                                             data-testid="loader"
                                                             size={16}
                                                         /> */}
-                                                        <p className="text-xs mt-4">Searching for available doctors</p>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs m-3">No doctors available on this date.</p>
-                                                )
-                                            )}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </FormControl>
-                            <FormMessage className="text-pink-600" />
-                        </FormItem>
+                                                            <p className="text-xs mt-4">Searching for available doctors</p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-xs m-3">No doctors available on this date.</p>
+                                                    )
+                                                )}
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </FormControl>
+                                <FormMessage className="text-pink-600" />
+                            </FormItem>
+                        )}
+                    />
+
+                    {appointmentSlots && appointmentSlots.length ? (
+                        <FormField
+                            control={form.control}
+                            name="appointment_slot_id"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col w-auto items-start">
+                                    <FormLabel>Select Appointment Time</FormLabel>
+                                    <FormControl>
+                                        <DropdownMenu {...field}>
+                                            <DropdownMenuTrigger asChild className="w-56">
+                                                <Button variant="outline">
+                                                    {appointmentSlots.find(slot => slot.id === field.value)?.start_time.toLocaleTimeString() || "Not Selected"}
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="w-56">
+                                                <DropdownMenuLabel>Appointment Slots</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => field.onChange(Number(value))}>
+                                                    {appointmentSlots.map((slot) => (
+                                                        <DropdownMenuRadioItem value={slot.id}>{slot.start_time.toLocaleTimeString()}</DropdownMenuRadioItem>
+                                                    ))}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </FormControl>
+                                    <FormMessage className="text-pink-600" />
+                                </FormItem>
+                            )}
+                        />
+                    ) : (
+                        isSearchingSlots && (
+                            <div className="m-3 flex gap-2 items-center">
+                                <ClipLoader
+                                    color='black'
+                                    aria-label="Loading Spinner"
+                                    data-testid="loader"
+                                    size={12}
+                                />
+                                <p className="text-sm">Searching for available slots</p>
+                            </div>
+                        )
                     )}
-                />
+                </div>
+
 
 
                 <FormField

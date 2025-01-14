@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast'
 
 export interface doctorInterface {
     id: any;
-    full_name: string
+    full_name: string;
 }
 
 export interface PatientAppointmentInterface {
@@ -39,6 +39,8 @@ export interface PatientAppointmentInterface {
     status: string;             // Appointment status (e.g., 'Pending', 'Confirmed')
     reason: string;             // Reason for the appointment
     doctor_full_name: string;   // Full name of the doctor (concatenated first_name and last_name)
+    start_time: string;         // Start time of the appointment (could be Date if you're using Date objects)
+    end_time: string;           // End time of the appointment (
 }
 
 
@@ -111,21 +113,6 @@ const PatientDashboard = () => {
                         <div className='grid grid-cols-2 gap-4'>
                             <div className='rounded-sm p-2 flex flex-col gap-2 select-none'>
                                 {appointments.length ? (
-                                    // appointments.map((app, index) => {
-                                    //     const fullDate = new Date(app.appointment_date)
-                                    //     const formattedDate = fullDate.getDate().toString() + "-" + fullDate.getMonth().toString() + "-" + fullDate.getFullYear().toString()
-                                    //     const formattedTime = fullDate.getHours().toString() + ":" + fullDate.getMinutes().toString()
-                                    //     return (
-                                    //         <div key={index} className='flex gap-6'>
-                                    //             <p>{index + 1}</p>
-                                    //             <p>Doctor: {app.doctor_full_name}</p>
-                                    //             <p>Date: {formattedDate}</p>
-                                    //             <p>Time: {formattedTime}</p>
-                                    //             <p>Status: {app.status}</p>
-                                    //             <p>Reason: {app.reason}</p>
-                                    //         </div>
-                                    //     )
-                                    // })
                                     <DataTable data={appointments} columns={PatientAppointmentColumns} />
                                 ) : (
                                     <ClipLoader

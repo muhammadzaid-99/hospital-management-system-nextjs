@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/server'
 import { Provider } from '@supabase/supabase-js'
+import { scheduler } from 'timers/promises'
 
 
 export async function getDoctors(date: Date) {
@@ -55,20 +56,60 @@ export async function getDoctors(date: Date) {
     return []
 }
 
+export async function getAppointmentSlots(doctor_id: string, date: Date) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        const { data: slots, error } = await supabase
+            .from('doctor_schedules')
+            .select('from_time, to_time, doctor_id, appointment_slots(start_time, end_time, schedule_id, id, appointments(id))')
+            .eq('doctor_id', doctor_id)
+            // .eq('appointment_slots.is_booked', false)
+            .gte('from_time', (new Date(date.setHours(0, 0, 0, 1))).toISOString())
+            .lte('to_time', (new Date(date.setHours(23, 59, 59, 999))).toISOString())
+
+        if (!error) {
+            if (!slots.length) return []
+            const formattedSlots = slots.flatMap(slot => {
+                return slot.appointment_slots;
+            });
+
+            const availableSlots = formattedSlots.filter(s => s.appointments === null)
+
+            const availableSlotsWithTime = availableSlots.map(slot => {
+                const { start_time, end_time, schedule_id, id } = slot;
+                return {
+                    schedule_id, id,
+                    start_time: new Date(start_time),
+                    end_time: new Date(end_time)
+                };
+            })
+            availableSlotsWithTime.sort((a, b) => a.start_time.getTime() - b.start_time.getTime());
+
+            console.log(availableSlotsWithTime)
+            return availableSlotsWithTime.slice(0, 10) // first 10 only
+        }
+        console.log(error)
+    }
+
+    return []
+}
+
 export async function getAppointments() {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
 
     if (userData.user) {
         const { data: appointments, error } = await supabase
-            .from('patient_appointments_with_doctors')
+            .from('patient_appointments_with_doctors_inslot')
             .select('*')
             .eq('auth_uid', userData.user.id);
 
 
         if (!error && appointments) {
             const cleanedAppointments = appointments.map(({ auth_uid, ...rest }) => rest);
-            // console.log(cleanedAppointments)
+            console.log(cleanedAppointments)
             return cleanedAppointments
         }
         console.log(error)
@@ -107,6 +148,56 @@ export async function createAppointment(formData: FormData) {
             appointment_date: formData.get('appointment_date') as string,
             status: formData.get('status') as string,
             reason: formData.get('reason') as string,
+            patient_id
+        }
+
+        console.log(data)
+
+        const { data: appointment, error } = await supabase
+            .from('appointments')
+            .insert([data]);
+
+        if (error) {
+            console.log(error)
+            return false
+        }
+
+        revalidatePath('/patient/dashboard')
+        return true
+    }
+}
+
+export async function createAppointmentInSlot(formData: FormData) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        const { data: patient, error: patientError } = await supabase
+            .from('profiles')
+            .select('auth_uid, patients ( id )')
+            .eq('auth_uid', userData.user.id)
+            .single(); // Assuming user_id is unique in the patients table
+
+
+        if (patientError) {
+            console.error('Error fetching patient ID:', patientError);
+            return;
+        }
+
+        if (!patient) {
+            console.error('No patient found for the given user ID');
+            return;
+        }
+
+        // @ts-ignore
+        const patient_id = patient.patients.id; // This is the correct patient ID to use
+
+        const data = {
+            doctor_id: parseInt(formData.get('doctor_id') as string),
+            appointment_date: formData.get('appointment_date') as string,
+            status: formData.get('status') as string,
+            reason: formData.get('reason') as string,
+            appointment_slot_id: parseInt(formData.get('appointment_slot_id') as string),
             patient_id
         }
 

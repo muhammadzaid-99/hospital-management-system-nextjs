@@ -47,10 +47,37 @@ export const PatientAppointmentColumns: ColumnDef<PatientAppointmentInterface>[]
         header: "Appointment Date",
         accessorKey: "appointment_date",
         cell: ({ row }) => {
-            const fullDate = new Date(row.getValue('appointment_date'));
-            if (['Confirmed', 'Completed'].includes(row.getValue('status')))
-                return <p className="min-w-20">{fullDate.toDateString()} @ {fullDate.getHours()}:{fullDate.getMinutes()} hrs</p>;
-            return <p className="min-w-20">{fullDate.toDateString()}</p>;
+            console.log(row.getValue('start_time'));
+            if (row.original.start_time === null) {
+                const offset = new Date().getTimezoneOffset();  // minutes
+                const fullDate = new Date(row.getValue('appointment_date'));
+                fullDate.setUTCMinutes(fullDate.getUTCMinutes() - offset);
+                return <p className="min-w-20">{fullDate.toDateString()}</p>;
+            } else {
+                const offset = new Date().getTimezoneOffset();  // minutes
+                const fullDate = new Date(row.original.start_time);
+                fullDate.setUTCMinutes(fullDate.getUTCMinutes() - offset);
+                // return <p className="min-w-20">{fullDate.toDateString()} @ {fullDate.getHours()}:{fullDate.getMinutes()}</p>;
+                return <p className="min-w-20">{fullDate.toDateString()} @ {fullDate.toLocaleTimeString()}</p>;
+            }
+        }
+    },
+    {
+        header: "Duration",
+        accessorKey: "end_time",
+        cell: ({ row }) => {
+            if (row.original.start_time === null) {
+                return <p className="min-w-20">-</p>;
+            } else {
+                const offset = new Date().getTimezoneOffset();  // minutes
+                const fullDate = new Date(row.original.start_time);
+                const toDate = new Date(row.original.end_time);
+                const durationMs = toDate.getTime() - fullDate.getTime();
+                const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                fullDate.setUTCMinutes(fullDate.getUTCMinutes() - offset);
+                return <p className="min-w-20">{durationHours != 0 ? durationHours + ' hr' : ''} {durationMinutes != 0 ? durationMinutes + ' min' : ''}</p>;
+            }
         }
     },
     {

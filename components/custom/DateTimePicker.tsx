@@ -70,7 +70,7 @@ export function DateTimePicker({
                         captionLayout="dropdown"
                         selected={date ?? undefined}
                         onSelect={(day) => handleDateSelect(day)}
-                        onDayClick={() => setIsOpen(false)}
+                        // onDayClick={() => setIsOpen(false)}
                         fromYear={2000}
                         toYear={new Date().getFullYear()}
                     // disabled={(date) =>
