@@ -63,9 +63,9 @@ export default function DoctorRegisterPage() {
                 router.push('/login')
             }
         }
-
-        loadData()
-
+        
+        // loadData()
+        setPageLoaded(true)
     }, [])
 
     return (

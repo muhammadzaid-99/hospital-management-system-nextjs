@@ -89,18 +89,21 @@ export async function oAuthSignIn(provider: Provider) {
 
 export async function getProfileRoleIfCreated() {
   const supabase = createClient()
+  if (!supabase) return null
   const { data: userData } = await supabase.auth.getUser()
 
   if (!userData) {
-    return redirect('/login')
+    return null
   }
-
+  
   const { data, error } = await supabase.from('profiles').select('role').eq('auth_uid', userData.user?.id)
 
+  if (error) return null
+  
   if (data && data.length) {
     return data[0].role
   }
-  return null
+  return 'No Role'
 }
 
 export async function getUserEmail() {

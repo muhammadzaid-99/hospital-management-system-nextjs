@@ -160,7 +160,7 @@ export async function getDoctorAppointments(fromDateStart: Date, fromDateEnd: Da
             // Create a new array with the 'doctors' field removed
             // @ts-ignore
             const cleanedAppointments = appointments.map(({ auth_uid, ...rest }) => rest);
-            console.log(cleanedAppointments)
+            // console.log(cleanedAppointments)
 
             if (!error && cleanedAppointments)
                 return cleanedAppointments
@@ -395,6 +395,24 @@ export async function updateAppointmentStatus(appointment: any) {
         }
     }
     return true
+}
+
+export async function getPatientIdFromAppointmentId(appointment_id: string) {
+    const supabase = createClient()
+
+    const { data: patient, error } = await supabase
+        .from('appointments')
+        .select('patient_id')
+        .eq('id', appointment_id)
+        .single()
+
+    if (error) {
+        console.log(error)
+        return ''
+    }
+    
+    // console.log("asd", patient.patient_id)
+    return patient.patient_id
 }
 
 // export async function checkDoctorsAvailability(doctor_id: any, date: Date) {

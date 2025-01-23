@@ -34,6 +34,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useEffect } from "react"
+import { DateTimePickerLingua } from "../custom/linguatime/datetime-picker"
 
 const schema = z.object({
     from_time: z.date().min(new Date(), "From time must be in the future"),
@@ -155,7 +156,8 @@ export function ScheduleCreateForm({ alertNewSchedule }: { alertNewSchedule: () 
                         <FormItem >
                             <FormLabel htmlFor="from_time">Select Appointment Date</FormLabel>
                             <FormControl>
-                                <DateTimePicker onDateTimeChange={field.onChange} />
+                                {/* <DateTimePicker onDateTimeChange={field.onChange} /> */}
+                                <DateTimePickerLingua dateTime={new Date()} setDateTime={field.onChange} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

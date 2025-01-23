@@ -57,23 +57,24 @@ export function LoginForm() {
         const loginRes = await emailLogin(data)
 
         if (loginRes) {
-            const profileRole = await getProfileRoleIfCreated()
+            // const profileRole = await getProfileRoleIfCreated()
 
-            if (profileRole === 'Patient') {
-                const patient = await isPatientRegistered()
-                if (patient)
-                    router.push('/patient/dashboard')
-                else
-                    router.push('/patient/register')
-            } else if (profileRole === 'Doctor') {
-                const doctor = await isDoctorRegistered()
-                if (doctor)
-                    router.push('/doctor/dashboard-new')
-                else
-                    router.push('/doctor/profile/created')
-            } else {
-                router.push('/profile/create')
-            }
+            // if (profileRole === 'Patient') {
+            //     const patient = await isPatientRegistered()
+            //     if (patient)
+            //         router.push('/patient/dashboard')
+            //     else
+            //         router.push('/patient/register')
+            // } else if (profileRole === 'Doctor') {
+            //     const doctor = await isDoctorRegistered()
+            //     if (doctor)
+            //         router.push('/doctor/dashboard-new')
+            //     else
+            //         router.push('/doctor/profile/created')
+            // } else {
+            //     router.push('/profile/create')
+            // }
+            router.push('/redirect')
         } else {
             setIsSubmitting(false)
         }

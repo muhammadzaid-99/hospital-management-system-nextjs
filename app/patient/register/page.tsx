@@ -63,8 +63,9 @@ export default function PatientRegisterPage() {
                 router.push('/profile/create')
             }
         }
-
-        loadData()
+        
+        // loadData()
+        setPageLoaded(true)
 
     }, [])
 

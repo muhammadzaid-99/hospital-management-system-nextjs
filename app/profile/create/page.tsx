@@ -31,21 +31,22 @@ export default function ProfileCreationPage() {
     const [registeredEmail, setRegisteredEmail] = useState("")
     useEffect(() => {
         async function loadData() {
-            const profile = await getProfileRoleIfCreated()
+            // const profile = await getProfileRoleIfCreated()
             setRegisteredEmail(await getUserEmail())
             
-            if (profile === 'Patient')
-                router.push('/patient/register')
-            else if (profile === 'Doctor') {
-                router.push('/doctor/profile/created')
-            } else if (profile === 'Operator') {
-                router.push('/operator/register')
-            } else {
+            // if (profile === 'Patient')
+            //     router.push('/patient/register')
+            // else if (profile === 'Doctor') {
+            //     router.push('/doctor/profile/created')
+            // } else if (profile === 'Operator') {
+            //     router.push('/operator/register')
+            // } else {
                 setPageLoaded(true)
-            }
+            // }
         }
-
+        
         loadData()
+        // setPageLoaded(true)
 
     }, [])
 

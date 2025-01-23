@@ -27,7 +27,8 @@ import { CheckupsColumns } from '@/components/custom/columns'
 import { PatientAppointmentColumns } from '@/components/custom/columns'
 import { RectangleEllipsis } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-
+import { ScrollArea } from '@/components/ui/scroll-area'
+import Checkups from '@/components/custom/Checkups'
 
 export interface doctorInterface {
     id: any;
@@ -45,8 +46,6 @@ export interface PatientAppointmentInterface {
 
 
 const PatientDashboard = () => {
-
-
     const [appointments, setAppointments] = useState<PatientAppointmentInterface[]>([])
     const [checkups, setCheckups] = useState<CheckupType[]>([])
     const [newAppointmentCreated, setNewAppointmentCreated] = useState(0)
@@ -67,7 +66,7 @@ const PatientDashboard = () => {
     useEffect(() => {
         async function loadCheckups() {
             console.log('loading checkups')
-            const __checkups = await getCheckups()
+            const __checkups = await getCheckups(undefined)
             setCheckups(__checkups || [])
         }
 
@@ -99,11 +98,11 @@ const PatientDashboard = () => {
                     <p>Welcome, Mr. Patient</p>
                 </div>
                 <Tabs defaultValue={patientTabSelected} onValueChange={setPatientTabSelected} className='w-full h-[90%] flex flex-col'>
-                    <TabsList className="w-full h-6 gap-4 justify-start group hover:h-12 transition-all bg-transparent hover:bg-neutral-100 cursor-pointer">
+                    <TabsList className="w-fit min-h-8 gap-4 justify-start group">
                         <RectangleEllipsis className='h-7 font-bold text-neutral-500 group-hover:text-neutral-900 hover:bg-none bg-neutral-100 py-1 w-12 rounded-md' />
-                        <TabsTrigger value="appointments" className="h-full px-6 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold opacity-0 group-hover:opacity-100">Appointments</TabsTrigger>
-                        <TabsTrigger value="checkups" className="h-full px-6 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold opacity-0 group-hover:opacity-100">Checkups</TabsTrigger>
-                        <TabsTrigger value="settings" className="h-full px-6 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold opacity-0 group-hover:opacity-100">Settings</TabsTrigger>
+                        <TabsTrigger value="appointments" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Appointments</TabsTrigger>
+                        <TabsTrigger value="checkups" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Checkups</TabsTrigger>
+                        <TabsTrigger value="settings" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Settings</TabsTrigger>
                     </TabsList>
                     <TabsContent value="appointments">
                         <div className="m-2">
@@ -111,7 +110,7 @@ const PatientDashboard = () => {
                             <p className='text-gray-600 text-sm'>Here you can view existing and create new appointments. <span className='underline cursor-pointer' onClick={() => setNewAppointmentCreated(prev => prev + 1)}>Refresh</span></p>
                         </div>
                         <div className='grid grid-cols-2 gap-4'>
-                            <div className='rounded-sm p-2 flex flex-col gap-2 select-none'>
+                            <ScrollArea className='lg:h-[30rem] rounded-sm p-2 pr-3 flex flex-col gap-2 select-none'>
                                 {appointments.length ? (
                                     <DataTable data={appointments} columns={PatientAppointmentColumns} />
                                 ) : (
@@ -123,7 +122,7 @@ const PatientDashboard = () => {
                                     />
                                 )}
                                 {/* <Button variant='default' className='w-full'>View Schedules</Button> */}
-                            </div>
+                            </ScrollArea>
                             <div>
                                 <AppointmentCreateForm alertNewAppointment={alertNewAppointment} />
                             </div>
@@ -135,8 +134,8 @@ const PatientDashboard = () => {
                             <p className='text-gray-600 text-sm'>Here you can see your checkup history.</p>
                         </div>
                         <div>
-                            <div className='rounded-sm p-2 flex flex-col gap-2'>
-                                {checkups.length ? (
+                            <div className='lg:h-[30rem] rounded-sm p-2 flex flex-col gap-2'>
+                                {/* {checkups.length ? (
                                     <DataTable data={checkups} columns={CheckupsColumns} />
                                 ) : (
                                     <ClipLoader
@@ -145,7 +144,8 @@ const PatientDashboard = () => {
                                         data-testid="loader"
                                         className="m-3"
                                     />
-                                )}
+                                )} */}
+                                <Checkups />
                                 {/* <Button variant='default' className='w-full'>View Schedules</Button> */}
                             </div>
                         </div>

@@ -69,6 +69,7 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
     });
 
 
+
     const onSubmit = async (values: z.infer<typeof schema>) => {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
@@ -135,6 +136,11 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
         loadSlots()
         console.log(appointmentSlots)
     }, [doctorSelectChange])
+
+    function dateToLocalDate(date: Date | undefined) {
+        if (!date) return undefined
+        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+    }
 
 
     return (
@@ -229,7 +235,7 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                                         <DropdownMenu {...field}>
                                             <DropdownMenuTrigger asChild className="w-56">
                                                 <Button variant="outline">
-                                                    {appointmentSlots.find(slot => slot.id === field.value)?.start_time.toLocaleTimeString() || "Not Selected"}
+                                                    {dateToLocalDate(appointmentSlots.find(slot => slot.id === field.value)?.start_time)?.toLocaleTimeString() || "Not Selected"}
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent className="w-56">
@@ -237,7 +243,7 @@ export function AppointmentCreateForm({ alertNewAppointment }: { alertNewAppoint
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuRadioGroup value={field.value?.toString()} onValueChange={(value) => field.onChange(Number(value))}>
                                                     {appointmentSlots.map((slot) => (
-                                                        <DropdownMenuRadioItem value={slot.id}>{slot.start_time.toLocaleTimeString()}</DropdownMenuRadioItem>
+                                                        <DropdownMenuRadioItem value={slot.id}>{dateToLocalDate(slot.start_time)?.toLocaleTimeString()}</DropdownMenuRadioItem>
                                                     ))}
                                                 </DropdownMenuRadioGroup>
                                             </DropdownMenuContent>
