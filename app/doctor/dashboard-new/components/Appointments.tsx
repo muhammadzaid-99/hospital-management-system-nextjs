@@ -38,15 +38,28 @@ import { AppointmentStatus, getDatesForFilter, statusColors } from "../page"
 import DoctorCheckupForm from "@/components/forms/DoctorCheckupForm"
 import { DoctorAppointmentInterface } from "../page"
 import { useToast } from "@/hooks/use-toast"
-import { getAppointmentSlotsForDoctor, getDoctorAppointments, getDoctorAppointmentsInSlot, updateAppointmentStatus } from "@/lib/actions/doctor.actions"
+import { getAppointmentSlotsForDoctor, getDoctorAppointments, getDoctorAppointmentsInSlot, getPatientIdFromAppointmentId, updateAppointmentStatus } from "@/lib/actions/doctor.actions"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, ChevronsDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronsDown, ChevronUp, FolderClock, UserRound } from 'lucide-react'
 import { DateTimePicker } from '@/components/custom/DateTimePicker'
 import { newDate } from "react-datepicker/dist/date_utils"
 import { Separator } from "@/components/ui/separator"
 import DatePicker from "@/components/custom/DatePicker"
 import { DatePickerSimple } from "@/components/custom/DatePickerSimple"
 import { Label } from "@/components/ui/label"
+import { date } from "zod"
+import Checkups from "@/components/custom/Checkups"
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet"
+import LabTests from "@/components/custom/LabTests"
+import PatientHistoryAISummary from "@/components/custom/PatientHistoryAISummary"
+
 
 interface AppointmentSlot {
     id: any;
@@ -64,6 +77,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
     const [selectedSlotId, setSelectedSlotId] = useState<Number>();
     const [patientDetailsOpen, setPatientDetailsOpen] = useState(true);
     const [appointmentSlots, setAppointmentSlots] = useState<AppointmentSlot[]>([])
+    const [patientId, setPatientId] = useState<string | undefined>(undefined)
     const { toast } = useToast();
 
     useEffect(() => {
@@ -87,7 +101,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
             setIsSearching(true)
             setAppointmentSlots([])
             setSelectedSlotId(undefined)
-            const __appointmentSlots = await getAppointmentSlotsForDoctor(appointmentActionDate || new Date())
+            const __appointmentSlots = await getAppointmentSlotsForDoctor(appointmentActionDate ?? new Date())
             // console.log(__appointmentSlots)
             setAppointmentSlots(__appointmentSlots)
             setIsSearching(false)
@@ -97,8 +111,20 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
     }, [appointmentActionDate])
 
     useEffect(() => {
-        console.log(selectedSlotId)
-    }, [selectedSlotId])
+        async function loadPatientId() {
+            setPatientId(undefined)
+            if (selectedAppointment) {
+                console.log('loading patient id', selectedAppointment.appointment_id)
+                const id = await getPatientIdFromAppointmentId(selectedAppointment.appointment_id)
+                if (id) {
+                    setPatientId(id)
+                }
+                console.log('Patient ID:', id)
+            }
+        }
+
+        loadPatientId()
+    }, [selectedAppointment])
 
     async function handleConfirmAppointmentClick() {
         setIsSubmitting(true);
@@ -131,7 +157,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
         setAppointmentActionDate(new Date())
         setIsSubmitting(false);
     }
-    
+
     async function handleCancelAppoitmentClick() {
         setIsSubmitting(true);
         console.log('Cancelling appointment...')
@@ -144,7 +170,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                     description: "The appointment has been cancelled successfully.",
                 })
                 setSelectedAppointment(undefined)
-                
+
             } else {
                 toast({
                     title: "Error",
@@ -154,7 +180,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
         }
         setIsSubmitting(false);
     }
-    
+
     async function handlePostponeAppointmentClick() {
         setIsSubmitting(true)
         console.log("Postponing appointment...")
@@ -167,7 +193,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                     description: "The appointment has been postponed successfully.",
                 })
                 setSelectedAppointment(undefined)
-                
+
             } else {
                 toast({
                     title: "Error",
@@ -183,6 +209,13 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
         setSelectedAppointment(appointment)
         setSelectedSlotId(Number(appointment.appointment_slot_id))
     }
+
+    function dateToLocalDate(date: Date | undefined) {
+        if (date === undefined) return undefined
+        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+    }
+
+
 
     const groupedAppointments = appointments.reduce<Record<string, DoctorAppointmentInterface[]>>((acc, app) => {
         if (!acc[app.status]) acc[app.status] = [];
@@ -218,11 +251,11 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                         <span className="font-semibold capitalize text-lg">
                                             {status}
                                         </span>
-                                        {status === 'Pending' && (
-                                            <Button variant='outline' className="h-8">
+                                        {/* {status === 'Pending' && (
+                                            <Button variant='outline' className="h-8" onClick={confirmAllPendingAppointments}>
                                                 Confirm All
                                             </Button>
-                                        )}
+                                        )} */}
                                     </div>
                                 </AccordionTrigger>
 
@@ -241,8 +274,8 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                         onClick={() => { handleAppointmentClick(app); }}
                                                     >
                                                         <span>{app.patient_full_name}</span>
-                                                        <span>{fullDate.toDateString()}</span>
-                                                        {['Confirm', 'Completed'].includes(app.status) && fullDate.toLocaleTimeString()}
+                                                        <span>{dateToLocalDate(fullDate)?.toDateString()}</span>
+                                                        {['Confirm', 'Completed'].includes(app.status) && dateToLocalDate(fullDate)?.toLocaleTimeString()}
                                                         {/* <span>{fullDate.toLocaleTimeString()}</span> */}
                                                     </Card>
                                                 </DialogTrigger>
@@ -255,27 +288,80 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                 {/* <span>{selectedAppointment.patient_full_name}</span> */}
                                                                 {/* <span>{formattedDate}</span> */}
                                                                 {/* <span>{formattedTime}</span> */}
-                                                                <span>{fullDate.toDateString()}{['Confirmed', 'Completed', 'Pending'].includes(selectedAppointment.status) && ' @ ' + startTime.toLocaleTimeString()} </span>
+                                                                <span>{dateToLocalDate(fullDate)?.toDateString()}{['Confirmed', 'Completed', 'Pending'].includes(selectedAppointment.status) && ' @ ' + dateToLocalDate(startTime)?.toLocaleTimeString()} </span>
                                                                 <span>{selectedAppointment.status}</span>
                                                             </DialogDescription>
                                                         </DialogHeader>
 
-                                                        <ScrollArea className='max-h-[28rem]'>
+                                                        <ScrollArea className='max-h-[28rem] pr-3'>
                                                             <div className='flex flex-col gap-2'>
                                                                 <Collapsible open={patientDetailsOpen} onOpenChange={setPatientDetailsOpen}>
                                                                     <CollapsibleTrigger className='flex gap-2'>
                                                                         <p className="font-bold">Patient Details </p>
                                                                         {patientDetailsOpen ? <ChevronUp /> : <ChevronDown />}
                                                                     </CollapsibleTrigger>
-                                                                    <CollapsibleContent className='bg-neutral-100 p-2 rounded-lg text-sm my-2'>
-                                                                        <p className="flex font-semibold"><span className="w-32  font-normal">Name</span> {selectedAppointment.patient_full_name}</p>
-                                                                        <p className="flex font-semibold"><span className="w-32  font-normal">Reason</span> {selectedAppointment.reason}</p>
-                                                                        <p className="flex mt-2"><span className="w-32  font-normal">Allergies</span> {selectedAppointment.allergies}</p>
-                                                                        <p className="flex"><span className="w-32  font-normal">Medical History</span> {selectedAppointment.medical_history}</p>
-                                                                        <p className="flex"><span className="w-32  font-normal">Family History</span> {selectedAppointment.family_history}</p>
-                                                                        <p className="flex"><span className="w-32  font-normal">Disability</span> {selectedAppointment.disability}</p>
+                                                                    <CollapsibleContent className='bg-neutral-100 p-2 rounded-lg text-sm my-2 grid grid-cols-3 gap-4 '>
+                                                                        <div className="col-span-2">
+                                                                            <p className="flex font-semibold"><span className="w-32  font-normal">Name</span> {selectedAppointment.patient_full_name}</p>
+                                                                            <p className="flex font-semibold"><span className="w-32  font-normal">Reason</span> {selectedAppointment.reason}</p>
+                                                                            <p className="flex mt-2"><span className="w-32  font-normal">Allergies</span> {selectedAppointment.allergies}</p>
+                                                                            <p className="flex"><span className="w-32  font-normal">Medical History</span> {selectedAppointment.medical_history}</p>
+                                                                            <p className="flex"><span className="w-32  font-normal">Family History</span> {selectedAppointment.family_history}</p>
+                                                                            <p className="flex"><span className="w-32  font-normal">Disability</span> {selectedAppointment.disability}</p>
+                                                                        </div>
+                                                                        <Sheet>
+                                                                            <SheetTrigger asChild>
+                                                                                <Button variant='outline' className="m-2">
+                                                                                    <FolderClock className="p-1 mr-2" />View Detailed History
+                                                                                </Button>
+                                                                            </SheetTrigger>
+                                                                            <SheetContent className="h-[90vh]" side={'top'}>
+                                                                                <SheetHeader>
+                                                                                    <SheetTitle>Patient Detailed History</SheetTitle>
+                                                                                    <SheetDescription>Here you can see patient's history records which covers checkups and lab tests in details.</SheetDescription>
+                                                                                    <div className="flex w-11/12 gap-10">
+                                                                                        <div className="bg-neutral-100 p-2 rounded-lg text-sm my-2 w-full">
+                                                                                            <p className="flex"><span className="w-32  font-normal">Allergies</span> {selectedAppointment.allergies}</p>
+                                                                                            <p className="flex"><span className="w-32  font-normal">Medical History</span> {selectedAppointment.medical_history}</p>
+                                                                                            <p className="flex"><span className="w-32  font-normal">Family History</span> {selectedAppointment.family_history}</p>
+                                                                                            <p className="flex"><span className="w-32  font-normal">Disability</span> {selectedAppointment.disability}</p>
+                                                                                        </div>
+                                                                                        <div className="flex flex-col items-center gap-2">
+                                                                                            <UserRound size={72} />
+                                                                                            <div className="text-2xl font-bold whitespace-nowrap">{selectedAppointment.patient_full_name}</div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {/* <div className="h-[25vh] overflow-auto text-sm">
+                                                                                        {patientId && <PatientHistoryAISummary patientId={patientId} />}
+                                                                                    </div> */}
+                                                                                </SheetHeader>
+                                                                                <div className="flex gap-4">
+                                                                                    <div className="mt-2 w-3/5">
+                                                                                        <h1 className='font-bold text-xl my-2'>Checkups</h1>
+                                                                                        <ScrollArea className='pr-2 h-[50vh]'>
+                                                                                            {patientId && (
+                                                                                                <Checkups patientId={patientId} />
+                                                                                            )}
+                                                                                        </ScrollArea>
+                                                                                    </div>
+                                                                                    <div className="mt-2 w-2/5">
+                                                                                        <h1 className='font-bold text-xl my-2'>Lab Tests</h1>
+                                                                                        <ScrollArea className='pr-2 h-[50vh]'>
+                                                                                            {patientId && (
+                                                                                                // <Checkups patientId={patientId} />
+                                                                                                <LabTests patientId={patientId} />
+                                                                                            )}
+                                                                                        </ScrollArea>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </SheetContent>
+                                                                        </Sheet>
+
                                                                     </CollapsibleContent>
                                                                 </Collapsible>
+                                                                <div className="max-h-[60vh] overflow-auto text-sm">
+                                                                    {patientId && <PatientHistoryAISummary patientId={patientId} />}
+                                                                </div>
 
                                                                 {selectedAppointment.status === 'Completed' && (
                                                                     <div>
@@ -311,8 +397,10 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                                             {appointmentSlots && appointmentSlots.length ? (
                                                                                                 <DropdownMenuTrigger asChild className="w-full">
                                                                                                     <Button variant="outline">
-                                                                                                        {appointmentSlots.find(slot => slot.id === selectedSlotId)?.start_time.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || (selectedAppointment.appointment_slot_id === selectedSlotId?.toString() && (new Date(selectedAppointment.start_time).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + " (Patient Selected)"))
-                                                                                                            || "Not Selected"}
+                                                                                                        {
+                                                                                                            (dateToLocalDate(appointmentSlots.find(slot => slot.id === selectedSlotId)?.start_time)?.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }))
+                                                                                                            ||
+                                                                                                            (selectedAppointment.appointment_slot_id?.toString() === selectedSlotId?.toString() && (dateToLocalDate(new Date(selectedAppointment.start_time))?.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + " (Reserved)")) || "Not Selected"}
                                                                                                     </Button>
                                                                                                 </DropdownMenuTrigger>
 
@@ -335,7 +423,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                                                 >
                                                                                                     {selectedAppointment.appointment_slot_id !== null && (
                                                                                                         <DropdownMenuRadioItem key={selectedAppointment.appointment_slot_id.toString()} value={selectedAppointment.appointment_slot_id.toString()}>
-                                                                                                            {new Date(selectedAppointment.start_time).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })} (Patient Selected)
+                                                                                                            {dateToLocalDate(new Date(selectedAppointment.start_time))?.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })} (Patient Selected / Reserved)
                                                                                                         </DropdownMenuRadioItem>
                                                                                                     )}
                                                                                                     {Object.entries(groupedSlots).map(([date, slots]) => (
@@ -343,7 +431,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                                                             <DropdownMenuLabel>{new Date(date).toDateString()}</DropdownMenuLabel>
                                                                                                             {slots.map((slot) => (
                                                                                                                 <DropdownMenuRadioItem key={slot.id} value={slot.id.toString()}>
-                                                                                                                    {new Date(slot.start_time).toLocaleTimeString([], {
+                                                                                                                    {dateToLocalDate(new Date(slot.start_time))?.toLocaleTimeString([], {
                                                                                                                         hour: '2-digit',
                                                                                                                         minute: '2-digit',
                                                                                                                     })}

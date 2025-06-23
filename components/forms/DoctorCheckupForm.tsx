@@ -14,6 +14,7 @@ import {
 
 import { Input } from "@/components/ui/input"
 
+import { Toggle } from "@/components/ui/toggle"
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ClipLoader from "react-spinners/ClipLoader"
@@ -25,6 +26,15 @@ import { Medicine, MedicineColumns } from "@/components/custom/columns" // type
 import { SelectedMedicines } from "@/components/custom/SelectedMedicines" // component
 import { SelectedMedicineTableDataType } from "@/components/custom/SelectedMedicines"
 import { useToast } from "@/hooks/use-toast"
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
+import LabTestInput from "../custom/LabTestInput"
+import { MultiSelect } from "../custom/multi-select"
+import { labTests } from "@/lib/constants/lab-tests"
 
 const prescriptionSchema = z.object({
     diagnosis: z.string().min(1, "Diagnosis is required"),
@@ -57,6 +67,8 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
     const [availableMedsCount, setAvailableMedsCount] = useState(0);
     const [queriedMedications, setQueriedMedications] = useState<MultiSelectItem[]>([])
     const [selectedMedications, setSelectedMedications] = useState<MultiSelectItem[]>([]);
+    const [selectedTests, setSelectedTests] = useState<MultiSelectItem[]>([]);
+    const [labTestSearchValue, setLabTestSearchValue] = useState<string>("");
     const { toast } = useToast()
 
     async function searchMedications(query: string) {
@@ -108,17 +120,6 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
         }
     });
 
-    // useEffect(() => {
-    //     form.setValue('medication', medicationsTableData.map(med => ({
-    //         drug_id: med.id,
-    //         dosage: med.dosage,
-    //         duration_in_days: Number(med.duration_in_days),
-    //         guidelines: med.guidelines
-    //     })))
-
-    //     console.log(form.getValues())
-    // }, [medicationsTableData])
-
     const onSubmit = async (values: z.infer<typeof prescriptionSchema>) => {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
@@ -139,7 +140,10 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
             guidelines: med.guidelines
         }))
         data.append('medication', JSON.stringify(medicationsData))
-        // data.append('medication', JSON.stringify(values.medication))
+
+        if (selectedTests.length !== 0) {
+            data.append('lab_tests', JSON.stringify(selectedTests.map((t) => t.value)))
+        }
 
         const appCreate = await submitCheckup(data)
         console.log('Form Data:', Object.fromEntries(data.entries()));
@@ -210,6 +214,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                                         id="notes"
                                         className="p-2 rounded-sm"
                                         value={field.value ?? ""}
+
                                         onChange={field.onChange} // Directly set the status
                                     />
                                 </FormControl>
@@ -218,28 +223,6 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                         )}
                     />
                 </div>
-
-
-
-
-                <FormItem>
-                    <FormLabel htmlFor="medication_search">Select Medications</FormLabel>
-                    <FormControl>
-                        <div>
-                            <FancyMultiSelect
-                                selected={selectedMedications}
-                                setSelected={setSelectedMedications}
-                                inputValue={medicationSearchQuery}
-                                setInputValue={setMedicationSearchQuery}
-                                itemsList={queriedMedications}
-                                setSelectablesLength={setAvailableMedsCount}
-                                placeholder="Search..."
-                            />
-                        </div>
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-
 
                 <FormField
                     control={form.control}
@@ -261,6 +244,55 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                     )}
                 />
 
+                <Accordion type="multiple" className="w-full">
+                    <AccordionItem value="medications">
+                        <AccordionTrigger>Add Medications from Inventory</AccordionTrigger>
+                        <AccordionContent>
+                            <FormItem>
+                                <FormLabel htmlFor="medication_search">Select Medications</FormLabel>
+                                <FormControl>
+                                    <div>
+                                        <FancyMultiSelect
+                                            selected={selectedMedications}
+                                            setSelected={setSelectedMedications}
+                                            inputValue={medicationSearchQuery}
+                                            setInputValue={setMedicationSearchQuery}
+                                            itemsList={queriedMedications}
+                                            setSelectablesLength={setAvailableMedsCount}
+                                            placeholder="Search..."
+                                        />
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+
+                            <SelectedMedicines details={medicationsDetails} data={medicationsTableData ?? []} setData={setMedicationsTableData} selected={selectedMedications} />
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="lab-test">
+                        <AccordionTrigger>Recommend Lab Tests</AccordionTrigger>
+                        <AccordionContent>
+                            <FormItem className="px-1">
+                                <FormLabel htmlFor="lab_test">Select Tests</FormLabel>
+                                <FormControl>
+                                    <div>
+                                        <FancyMultiSelect
+                                            selected={selectedTests}
+                                            setSelected={setSelectedTests}
+                                            inputValue={labTestSearchValue}
+                                            setInputValue={setLabTestSearchValue}
+                                            itemsList={labTests}
+                                            setSelectablesLength={() => { }}
+                                            placeholder="Enter recommended lab tests..."
+                                        />
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+
                 <FormField
                     control={form.control}
                     name="other_medication"
@@ -279,8 +311,6 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                         </FormItem>
                     )}
                 />
-
-                <SelectedMedicines details={medicationsDetails} data={medicationsTableData ?? []} setData={setMedicationsTableData} selected={selectedMedications} />
 
                 <Button type="submit" variant='default' className='w-full'>
                     <span>Submit Checkup</span>

@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input"
 import PrescriptionData from "./PrescriptionData";
 import { PatientAppointmentInterface } from "@/app/patient/dashboard/page";
 export type AppointmentStatus = 'Pending' | 'Completed' | 'Cancelled' | 'Postponed' | 'Confirmed';
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card"
 
 export const statusColors: Record<AppointmentStatus, string> = {
     Pending: "bg-yellow-100 hover:bg-yellow-100 text-yellow-800 hover:bg-opacity-70",
@@ -33,6 +38,8 @@ export type Medicine = {
 
 export type CheckupType = {
     id: string;
+    appointment_id: string;
+    service_id: string;
     visit_date: Date;
     diagnosis: string;
     treatment: string;
@@ -149,7 +156,7 @@ export const CheckupsColumns: ColumnDef<CheckupType>[] = [
         header: "Prescription",
         accessorKey: "prescription_id",
         cell: ({ row }) => {
-            return <PrescriptionData prescription_id={row.getValue('prescription_id')} />
+            return <PrescriptionData prescription_id={row.getValue('prescription_id') as string} appointment_id={row.original.appointment_id as string} />
         }
     }
 ]
@@ -205,9 +212,18 @@ export const MedicineColumns: ColumnDef<Medicine>[] = [
         header: "Description",
         accessorKey: "description",
         cell: ({ row }) => {
-            const desc = (row.getValue('description') as string).slice(0, 50);
+            // const desc = (row.getValue('description') as string).slice(0, 50);
+            // return <p className="min-w-60">{desc.length < 50 ? desc : `${desc}...`}</p>;
 
-            return <p className="min-w-60">{desc.length < 50 ? desc : `${desc}...`}</p>;
+            const desc = (row.getValue('description') as string);
+            return (
+                <HoverCard>
+                    <HoverCardTrigger asChild><p className="min-w-60">{desc.length < 50 ? desc : `${desc.slice(0, 50)}...`}</p></HoverCardTrigger>
+                    <HoverCardContent>
+                        <p className="break-words whitespace-normal">{desc}</p>
+                    </HoverCardContent>
+                </HoverCard>
+            )
         }
     },
 ]

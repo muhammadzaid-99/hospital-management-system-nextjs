@@ -55,16 +55,17 @@ export default function PatientRegisterPage() {
                     const data = await getUserProfileInfo()
                     if (data) setProfileData(data)
 
-                    setPageLoaded(true)
                 }
             } else if (profile == 'Doctor') {
                 router.push('/doctor/profile/created')
             } else {
                 router.push('/profile/create')
             }
+            setPageLoaded(true)
         }
 
         loadData()
+        // setPageLoaded(true)
 
     }, [])
 

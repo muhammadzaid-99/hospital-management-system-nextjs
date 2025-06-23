@@ -11,6 +11,7 @@ import {
     CommandList,
 } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
+import { Portal } from "@radix-ui/react-portal";
 
 export type MultiSelectItem = Record<"value" | "label", string>;
 
@@ -141,7 +142,7 @@ export function FancyMultiSelect({ selected, setSelected, itemsList, setSelectab
             <div className="relative mt-2">
                 <CommandList>
                     {open && selectables.length > 0 ? (
-                        <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+                        <div className="z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                             <CommandGroup className="max-h-40 overflow-y-scroll">
                                 {selectables.map((item) => {
                                     return (

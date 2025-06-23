@@ -19,52 +19,71 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs"
 import { useEffect, useState } from 'react'
-import { getUserEmail, getProfileRoleIfCreated } from '@/lib/actions/user.actions'
+import { getUserEmail, isPatientRegistered, getProfileRoleIfCreated, isDoctorRegistered, isStaffRegistered } from '@/lib/actions/user.actions'
 import { useRouter } from 'next/navigation'
 import { profile } from 'console'
 import FadeLoader from 'react-spinners/FadeLoader'
 import { ProfileCreationForm } from '@/components/forms/ProfileCreationForm'
+import { PatientRegisterForm } from '@/components/forms/PatientRegisterForm'
+import { getUserProfileInfo } from '@/lib/actions/user.actions'
+import { DoctorRegisterForm } from '@/components/forms/DoctorRegisterForm'
+import { StaffRegisterForm } from '@/components/forms/StaffRegisterForm'
 
-export default function ProfileCreationPage() {
+interface profileDataInterface {
+    email: string;
+    first_name: string | any;
+    last_name: string | any;
+    gender: 'Male' | 'Female' | 'Other' | undefined
+}
+
+export default function StaffRegisterPage() {
     const router = useRouter()
     const [pageLoaded, setPageLoaded] = useState(false)
-    const [registeredEmail, setRegisteredEmail] = useState("")
+    const [profileData, setProfileData] = useState<profileDataInterface>({
+        email: '',
+        first_name: '',
+        last_name: '',
+        gender: undefined
+    })
+
     useEffect(() => {
         async function loadData() {
-            // const profile = await getProfileRoleIfCreated()
-            setRegisteredEmail(await getUserEmail())
-            
-            // if (profile === 'Patient')
-            //     router.push('/patient/register')
-            // else if (profile === 'Doctor') {
-            //     router.push('/doctor/profile/created')
-            // } else if (profile === 'Operator') {
-            //     router.push('/operator/register')
-            // } else {
-                setPageLoaded(true)
-            // }
+            const profile = await getProfileRoleIfCreated()
+            const staff = await isStaffRegistered()
+
+            if (profile === 'Staff') {
+                if (staff)
+                    router.push('/rooms')
+                else {
+                    const data = await getUserProfileInfo()
+                    if (data) setProfileData(data)
+
+                }
+            } else {
+                router.push('/login')
+            }
+            setPageLoaded(true)
         }
-        
+
         loadData()
         // setPageLoaded(true)
-
     }, [])
 
     return (
         <section className="w-screen h-dvh p-6 flex justify-center">
-            <div className="space-y-10 w-[480px] flex flex-col justify-center">
+            <div className="space-y-10 w-[600px] flex flex-col justify-center">
                 {/* <h1 className="font-bold text-xl text-center">
                     Complete Your Profile
                 </h1> */}
                 {
                     pageLoaded ? (
-                        <Card>
+                        <Card >
                             <CardHeader>
-                                <CardTitle>Complete Your Profile</CardTitle>
-                                <CardDescription>Let us know more about you.</CardDescription>
+                                <CardTitle>Technical Information</CardTitle>
+                                <CardDescription>Fill in the form to complete your registration process.</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <ProfileCreationForm userEmail={registeredEmail} />
+                            <CardContent className='max-h-[600px] overflow-auto remove-scrollbar'>
+                                <StaffRegisterForm profileData={profileData} />
                             </CardContent>
                             <CardContent>
                             </CardContent>

@@ -56,16 +56,15 @@ export default function DoctorRegisterPage() {
                 else {
                     const data = await getUserProfileInfo()
                     if (data) setProfileData(data)
-
-                    setPageLoaded(true)
                 }
             } else {
                 router.push('/login')
             }
+            setPageLoaded(true)
         }
 
         loadData()
-
+        // setPageLoaded(true)
     }, [])
 
     return (
