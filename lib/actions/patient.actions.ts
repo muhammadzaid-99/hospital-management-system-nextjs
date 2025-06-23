@@ -218,7 +218,7 @@ export async function createAppointmentInSlot(formData: FormData) {
     }
 }
 
-export async function getCheckups(patientId: string | undefined) { 
+export async function getCheckups(patientId: string | undefined) {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
 
@@ -235,13 +235,13 @@ export async function getCheckups(patientId: string | undefined) {
                 .select('auth_uid, patients ( id )')
                 .eq('auth_uid', userData.user.id)
                 .single(); // Assuming user_id is unique in the patients table
-    
-    
+
+
             if (patientError) {
                 console.error('Error fetching patient ID:', patientError);
                 return;
             }
-    
+
             if (!patient) {
                 console.error('No patient found for the given user ID');
                 return;
@@ -254,8 +254,9 @@ export async function getCheckups(patientId: string | undefined) {
 
         const { data: checkups, error } = await supabase
             .from('checkups')
-            .select('id, service_id, visit_date, diagnosis, treatment, notes, prescription_id, appointments (doctors (profiles (first_name, last_name)), patients (id))')
-            .eq('appointments.patients.id', patient_id);
+            .select('id, service_id, visit_date, diagnosis, treatment, notes, prescription_id, appointments (id, doctors (profiles (first_name, last_name)), patients (id))')
+            .eq('appointments.patients.id', patient_id)
+            .order('visit_date', { ascending: false });
 
         // console.log(checkups[0].appointments.doctors)
         // console.log(checkups[0].appointments.patients)
@@ -270,6 +271,7 @@ export async function getCheckups(patientId: string | undefined) {
                 notes: any;
                 prescription_id: any;
                 appointments: {
+                    id: any;
                     doctors: {
                         profiles: {
                             first_name: any;
@@ -288,7 +290,9 @@ export async function getCheckups(patientId: string | undefined) {
                 return {
                     ...checkup,
                     doctor_full_name: `${first_name} ${last_name}`,
-                    doctors: undefined // This effectively removes the 'doctors' field
+                    appointment_id: checkup.appointments.id,
+                    doctors: undefined, // This effectively removes the 'doctors' field
+                    appointments: undefined, // This effectively removes the 'appointments' field
                 };
             });
 
@@ -299,6 +303,134 @@ export async function getCheckups(patientId: string | undefined) {
 
     return []
 }
+
+export async function getLabTests(patientId: string | undefined) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        let patient_id;
+
+        if (patientId) {
+            // here doctor is fetching the lab tests of a patient
+            // doctor authorization is not implemented yet
+            patient_id = patientId;
+        } else {
+            const { data: patient, error: patientError } = await supabase
+                .from('profiles')
+                .select('auth_uid, patients ( id )')
+                .eq('auth_uid', userData.user.id)
+                .single(); // Assuming user_id is unique in the patients table
+
+
+            if (patientError) {
+                console.error('Error fetching patient ID:', patientError);
+                return;
+            }
+
+            if (!patient) {
+                console.error('No patient found for the given user ID');
+                return;
+            }
+
+            // @ts-ignore
+            patient_id = patient.patients.id; // This is the correct patient ID to use
+        }
+
+        const { data: labTests, error } = await supabase
+            .from('lab_tests')
+            .select('*, appointments (patient_id))')
+            .eq('appointments.patient_id', patient_id);
+
+        if (!error && labTests) {
+            // console.log(labTests)
+            const assertedLabTests = labTests as {
+                id: any;
+                test_name: any;
+                appointment_id: any;
+                approval_date: any,
+                completion_date: any,
+                prescribed_date: any,
+                report_link: any,
+                request_date: any,
+                results: any,
+                service_id: any,
+                status: any,
+                technician_id: any,
+                appointments: {
+                    patient_id: any;
+                };
+            }[] | [];
+
+            const labTestCleaned = assertedLabTests.map(labTest => {
+                return {
+                    ...labTest,
+                    // id: undefined,
+                    appointments: undefined,
+                    appointment_id: undefined,
+                }
+            });
+            return labTestCleaned
+        }
+        console.log(error)
+        return []
+    }
+}
+
+export async function requestLabTest(labtestId: string) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (labtestId && userData.user) {
+
+        const { data: patient, error: patientError } = await supabase
+            .from('profiles')
+            .select('auth_uid, patients ( id )')
+            .eq('auth_uid', userData.user.id)
+            .single(); // Assuming user_id is unique in the patients table
+
+
+        if (patientError) {
+            console.error('Error fetching patient ID:', patientError);
+            return;
+        }
+
+        if (!patient) {
+            console.error('No patient found for the given user ID');
+            return;
+        }
+
+        // @ts-ignore
+        const patient_id = patient.patients.id; // This is the correct patient ID to use
+
+        const { data: labTest, error: fetchError } = await supabase
+            .from('lab_tests')
+            .select('id, appointments(patient_id)') // Only selecting id since we just need to confirm it exists
+            .eq('appointments.patient_id', patient_id)
+            .eq('id', labtestId)
+            .single(); // Since we expect only one result
+
+
+        if (fetchError) {
+            console.error(fetchError);
+            return null
+        } else if (labTest) {
+            // Step 2: Update the found lab test
+            const { error: updateError } = await supabase
+                .from('lab_tests')
+                .update({ status: 'Requested', request_date: new Date().toISOString() })
+                .eq('id', labtestId);
+
+            if (!updateError) {
+                return true
+            }
+            console.log(updateError)
+        }
+        return null
+    }
+    return null
+}
+
 export async function getCheckupPaymentStatus() {
 
 }
@@ -339,4 +471,23 @@ export async function getPrescriptionInfo(prescription_id: string) {
     }
 
     return null
+}
+
+
+export async function getLabTestNames(appointment_id: string) {
+    const supabase = createClient()
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user) {
+        const { data: labTestData, error } = await supabase
+            .from('lab_tests')
+            .select('test_name')
+            .eq('appointment_id', appointment_id)
+
+        if (!error) {
+            return labTestData
+        }
+    }
+
+    return []
 }

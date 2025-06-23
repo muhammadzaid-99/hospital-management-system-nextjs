@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
-import { getProfileRoleIfCreated, isPatientRegistered, isDoctorRegistered } from './lib/actions/user.actions';
+import { getProfileRoleIfCreated, isPatientRegistered, isDoctorRegistered, isStaffRegistered } from './lib/actions/user.actions';
 import { isRedirectError } from 'next/dist/client/components/redirect';
 
 export async function middleware(request: NextRequest) {
@@ -37,6 +37,18 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/doctor/dashboard-new'; // Redirect to Doctor's main page if registered
     } else {
       url.pathname = '/doctor/register'; // Redirect to Doctor Register
+    }
+  } else if (profileRole === 'Staff') {
+    if (!isRedirectRequest && !url.pathname.startsWith('/staff')) {
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    const staff = await isStaffRegistered();
+    if (staff) {
+      url.pathname = '/staff/dashboard'; // Redirect to Staff
+    } else {
+      url.pathname = '/staff/register'; // Redirect to Staff Registration
     }
   } else if (profileRole === 'No Role') {
     url.pathname = '/profile/create'; // Redirect for users with no role

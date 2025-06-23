@@ -19,7 +19,7 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs"
 import { useEffect, useState } from 'react'
-import { getUserEmail, isPatientRegistered, getProfileRoleIfCreated, isDoctorRegistered } from '@/lib/actions/user.actions'
+import { getUserEmail, isPatientRegistered, getProfileRoleIfCreated, isDoctorRegistered, isStaffRegistered } from '@/lib/actions/user.actions'
 import { useRouter } from 'next/navigation'
 import { profile } from 'console'
 import FadeLoader from 'react-spinners/FadeLoader'
@@ -27,6 +27,7 @@ import { ProfileCreationForm } from '@/components/forms/ProfileCreationForm'
 import { PatientRegisterForm } from '@/components/forms/PatientRegisterForm'
 import { getUserProfileInfo } from '@/lib/actions/user.actions'
 import { DoctorRegisterForm } from '@/components/forms/DoctorRegisterForm'
+import { StaffRegisterForm } from '@/components/forms/StaffRegisterForm'
 
 interface profileDataInterface {
     email: string;
@@ -35,7 +36,7 @@ interface profileDataInterface {
     gender: 'Male' | 'Female' | 'Other' | undefined
 }
 
-export default function DoctorRegisterPage() {
+export default function StaffRegisterPage() {
     const router = useRouter()
     const [pageLoaded, setPageLoaded] = useState(false)
     const [profileData, setProfileData] = useState<profileDataInterface>({
@@ -48,14 +49,15 @@ export default function DoctorRegisterPage() {
     useEffect(() => {
         async function loadData() {
             const profile = await getProfileRoleIfCreated()
-            const doctor = await isDoctorRegistered()
+            const staff = await isStaffRegistered()
 
-            if (profile === 'Doctor') {
-                if (doctor)
+            if (profile === 'Staff') {
+                if (staff)
                     router.push('/rooms')
                 else {
                     const data = await getUserProfileInfo()
                     if (data) setProfileData(data)
+
                 }
             } else {
                 router.push('/login')
@@ -81,7 +83,7 @@ export default function DoctorRegisterPage() {
                                 <CardDescription>Fill in the form to complete your registration process.</CardDescription>
                             </CardHeader>
                             <CardContent className='max-h-[600px] overflow-auto remove-scrollbar'>
-                                <DoctorRegisterForm profileData={profileData} />
+                                <StaffRegisterForm profileData={profileData} />
                             </CardContent>
                             <CardContent>
                             </CardContent>

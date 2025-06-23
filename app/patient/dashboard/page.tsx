@@ -29,6 +29,7 @@ import { RectangleEllipsis } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import Checkups from '@/components/custom/Checkups'
+import LabTests from '@/components/custom/LabTests'
 
 export interface doctorInterface {
     id: any;
@@ -63,15 +64,15 @@ const PatientDashboard = () => {
         setNewAppointmentCreated((newAppointmentCreated) => newAppointmentCreated + 1)
     }
 
-    useEffect(() => {
-        async function loadCheckups() {
-            console.log('loading checkups')
-            const __checkups = await getCheckups(undefined)
-            setCheckups(__checkups || [])
-        }
+    // useEffect(() => {
+    //     async function loadCheckups() {
+    //         console.log('loading checkups')
+    //         const __checkups = await getCheckups(undefined)
+    //         setCheckups(__checkups || [])
+    //     }
 
-        loadCheckups()
-    }, [])
+    //     loadCheckups()
+    // }, [])
 
     useEffect(() => {
         async function loadAppointments() {
@@ -102,6 +103,7 @@ const PatientDashboard = () => {
                         <RectangleEllipsis className='h-7 font-bold text-neutral-500 group-hover:text-neutral-900 hover:bg-none bg-neutral-100 py-1 w-12 rounded-md' />
                         <TabsTrigger value="appointments" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Appointments</TabsTrigger>
                         <TabsTrigger value="checkups" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Checkups</TabsTrigger>
+                        <TabsTrigger value="labtests" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Lab Tests</TabsTrigger>
                         <TabsTrigger value="settings" className="h-full px-6 data-[state=active]:text-white data-[state=active]:bg-neutral-900">Settings</TabsTrigger>
                     </TabsList>
                     <TabsContent value="appointments">
@@ -146,6 +148,28 @@ const PatientDashboard = () => {
                                     />
                                 )} */}
                                 <Checkups />
+                                {/* <Button variant='default' className='w-full'>View Schedules</Button> */}
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="labtests">
+                        <div className="m-2">
+                            <h1 className='font-bold text-xl'>Lab Tests</h1>
+                            <p className='text-gray-600 text-sm'>Here you can see your lab test history.</p>
+                        </div>
+                        <div>
+                            <div className='lg:h-[30rem] rounded-sm p-2 flex flex-col gap-2'>
+                                {/* {checkups.length ? (
+                                    <DataTable data={checkups} columns={CheckupsColumns} />
+                                ) : (
+                                    <ClipLoader
+                                        color='black'
+                                        aria-label="Loading Spinner"
+                                        data-testid="loader"
+                                        className="m-3"
+                                    />
+                                )} */}
+                                <LabTests />
                                 {/* <Button variant='default' className='w-full'>View Schedules</Button> */}
                             </div>
                         </div>

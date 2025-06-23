@@ -57,6 +57,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet"
+import LabTests from "@/components/custom/LabTests"
+import PatientHistoryAISummary from "@/components/custom/PatientHistoryAISummary"
 
 
 interface AppointmentSlot {
@@ -291,7 +293,7 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                             </DialogDescription>
                                                         </DialogHeader>
 
-                                                        <ScrollArea className='max-h-[28rem]'>
+                                                        <ScrollArea className='max-h-[28rem] pr-3'>
                                                             <div className='flex flex-col gap-2'>
                                                                 <Collapsible open={patientDetailsOpen} onOpenChange={setPatientDetailsOpen}>
                                                                     <CollapsibleTrigger className='flex gap-2'>
@@ -316,23 +318,27 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                             <SheetContent className="h-[90vh]" side={'top'}>
                                                                                 <SheetHeader>
                                                                                     <SheetTitle>Patient Detailed History</SheetTitle>
+                                                                                    <SheetDescription>Here you can see patient's history records which covers checkups and lab tests in details.</SheetDescription>
                                                                                     <div className="flex w-11/12 gap-10">
-                                                                                        <SheetDescription className="bg-neutral-100 p-2 rounded-lg text-sm my-2 w-full">
-                                                                                            <p className="flex mt-2"><span className="w-32  font-normal">Allergies</span> {selectedAppointment.allergies}</p>
+                                                                                        <div className="bg-neutral-100 p-2 rounded-lg text-sm my-2 w-full">
+                                                                                            <p className="flex"><span className="w-32  font-normal">Allergies</span> {selectedAppointment.allergies}</p>
                                                                                             <p className="flex"><span className="w-32  font-normal">Medical History</span> {selectedAppointment.medical_history}</p>
                                                                                             <p className="flex"><span className="w-32  font-normal">Family History</span> {selectedAppointment.family_history}</p>
                                                                                             <p className="flex"><span className="w-32  font-normal">Disability</span> {selectedAppointment.disability}</p>
-                                                                                        </SheetDescription>
+                                                                                        </div>
                                                                                         <div className="flex flex-col items-center gap-2">
                                                                                             <UserRound size={72} />
                                                                                             <div className="text-2xl font-bold whitespace-nowrap">{selectedAppointment.patient_full_name}</div>
                                                                                         </div>
                                                                                     </div>
+                                                                                    {/* <div className="h-[25vh] overflow-auto text-sm">
+                                                                                        {patientId && <PatientHistoryAISummary patientId={patientId} />}
+                                                                                    </div> */}
                                                                                 </SheetHeader>
                                                                                 <div className="flex gap-4">
                                                                                     <div className="mt-2 w-3/5">
                                                                                         <h1 className='font-bold text-xl my-2'>Checkups</h1>
-                                                                                        <ScrollArea className='pr-2 h-[55vh]'>
+                                                                                        <ScrollArea className='pr-2 h-[50vh]'>
                                                                                             {patientId && (
                                                                                                 <Checkups patientId={patientId} />
                                                                                             )}
@@ -340,9 +346,10 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
                                                                                     </div>
                                                                                     <div className="mt-2 w-2/5">
                                                                                         <h1 className='font-bold text-xl my-2'>Lab Tests</h1>
-                                                                                        <ScrollArea className='pr-2 h-[55vh]'>
+                                                                                        <ScrollArea className='pr-2 h-[50vh]'>
                                                                                             {patientId && (
-                                                                                                <Checkups patientId={patientId} />
+                                                                                                // <Checkups patientId={patientId} />
+                                                                                                <LabTests patientId={patientId} />
                                                                                             )}
                                                                                         </ScrollArea>
                                                                                     </div>
@@ -352,6 +359,9 @@ const Appointments = ({ appointmentsFilter }: { appointmentsFilter: string }) =>
 
                                                                     </CollapsibleContent>
                                                                 </Collapsible>
+                                                                <div className="max-h-[60vh] overflow-auto text-sm">
+                                                                    {patientId && <PatientHistoryAISummary patientId={patientId} />}
+                                                                </div>
 
                                                                 {selectedAppointment.status === 'Completed' && (
                                                                     <div>

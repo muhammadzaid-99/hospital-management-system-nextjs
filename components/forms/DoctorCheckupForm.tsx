@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/accordion"
 import LabTestInput from "../custom/LabTestInput"
 import { MultiSelect } from "../custom/multi-select"
+import { labTests } from "@/lib/constants/lab-tests"
 
 const prescriptionSchema = z.object({
     diagnosis: z.string().min(1, "Diagnosis is required"),
@@ -54,15 +55,6 @@ const prescriptionSchema = z.object({
     //     })
     // ),
 });
-const labTests = [
-    { value: "blood-test", label: "Blood Test" },
-    { value: "x-ray", label: "X-Ray" },
-    { value: "mri", label: "MRI" },
-    { value: "ct-scan", label: "CT Scan" },
-    { value: "urine-test", label: "Urine Test" },
-    { value: "ecg", label: "ECG" },
-    { value: "lipid-profile", label: "Lipid Profile" },
-];
 
 
 
@@ -75,7 +67,6 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
     const [availableMedsCount, setAvailableMedsCount] = useState(0);
     const [queriedMedications, setQueriedMedications] = useState<MultiSelectItem[]>([])
     const [selectedMedications, setSelectedMedications] = useState<MultiSelectItem[]>([]);
-    const [isRecommendLabTest, setIsRecommendLabTest] = useState(false)
     const [selectedTests, setSelectedTests] = useState<MultiSelectItem[]>([]);
     const [labTestSearchValue, setLabTestSearchValue] = useState<string>("");
     const { toast } = useToast()
@@ -150,11 +141,9 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
         }))
         data.append('medication', JSON.stringify(medicationsData))
 
-        if (isRecommendLabTest) {
-
+        if (selectedTests.length !== 0) {
+            data.append('lab_tests', JSON.stringify(selectedTests.map((t) => t.value)))
         }
-
-
 
         const appCreate = await submitCheckup(data)
         console.log('Form Data:', Object.fromEntries(data.entries()));
@@ -255,7 +244,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                     )}
                 />
 
-                <Accordion type="multiple" className="w-full" onValueChange={(value) => setIsRecommendLabTest(value.includes("lab-test"))}>
+                <Accordion type="multiple" className="w-full">
                     <AccordionItem value="medications">
                         <AccordionTrigger>Add Medications from Inventory</AccordionTrigger>
                         <AccordionContent>
@@ -284,7 +273,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                         <AccordionTrigger>Recommend Lab Tests</AccordionTrigger>
                         <AccordionContent>
                             <FormItem className="px-1">
-                                <FormLabel htmlFor="lab_test">Lab Test Recommendations</FormLabel>
+                                <FormLabel htmlFor="lab_test">Select Tests</FormLabel>
                                 <FormControl>
                                     <div>
                                         <FancyMultiSelect
@@ -293,7 +282,7 @@ const DoctorCheckupForm = ({ appointmentId }: { appointmentId?: any }) => {
                                             inputValue={labTestSearchValue}
                                             setInputValue={setLabTestSearchValue}
                                             itemsList={labTests}
-                                            setSelectablesLength={() => {}}
+                                            setSelectablesLength={() => { }}
                                             placeholder="Enter recommended lab tests..."
                                         />
                                     </div>

@@ -87,8 +87,8 @@ export function ProfileCreationForm({ userEmail }: { userEmail: string}) {
                 router.push('/patient/register')
             else if (profileRes.role === 'Doctor') 
                 router.push('/doctor/profile/created')
-            else if (profileRes.role === 'Operator')
-                router.push('/operator/register')
+            else if (profileRes.role === 'Staff')
+                router.push('/staff/register')
         }
         setIsSubmitting(false)
     }

@@ -241,6 +241,39 @@ export async function registerDoctor(formData: FormData) {
   return false
 }
 
+export async function registerStaff(formData: FormData) {
+
+  const supabase = createClient()
+  const { data } = await supabase.auth.getUser()
+
+  if (!data.user || data.user?.email != formData.get('email'))
+    return false;
+
+  const { data: user_data } = await supabase.from('profiles').select('id').eq('auth_uid', data.user.id)
+
+
+  if (user_data) {
+    const user_id = user_data[0].id
+
+    const form_data = [{
+      position: formData.get('position') as string,
+      join_date: new Date().toISOString(),
+      user_id: user_id
+    }]
+
+    console.log('about to register')
+
+    const { data: registerData, error } = await supabase.from('staff').insert(form_data).select()
+
+    console.log(registerData, error)
+
+    if (!error)
+      return true
+  }
+
+  return false
+}
+
 export async function isPatientRegistered() {
   const supabase = createClient()
   const { data: userData } = await supabase.auth.getUser()
@@ -275,6 +308,25 @@ export async function isDoctorRegistered() {
   console.log(data?.at(0)?.doctors)
 
   return data?.length === 1 && data?.at(0)?.doctors ? true : false
+}
+
+
+export async function isStaffRegistered() {
+  const supabase = createClient()
+  const { data: userData } = await supabase.auth.getUser()
+
+  if (!userData) {
+    return redirect('/login')
+  }
+
+  const { data, error } = await supabase.from('profiles').select(`
+    id,
+    staff (id)
+    `).eq('auth_uid', userData.user?.id)
+
+  console.log(data?.at(0)?.staff)
+
+  return data?.length === 1 && data?.at(0)?.staff ? true : false
 }
 
 

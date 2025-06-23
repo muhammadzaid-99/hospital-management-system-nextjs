@@ -13,6 +13,7 @@ const Checkups = ({ patientId }: { patientId?: string }) => {
             console.log('loading checkups', patientId)
             const __checkups = await getCheckups(patientId)
             setCheckups(__checkups || [])
+            console.log(__checkups)
         }
 
         loadCheckups()

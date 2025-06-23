@@ -38,6 +38,7 @@ export type Medicine = {
 
 export type CheckupType = {
     id: string;
+    appointment_id: string;
     service_id: string;
     visit_date: Date;
     diagnosis: string;
@@ -155,7 +156,7 @@ export const CheckupsColumns: ColumnDef<CheckupType>[] = [
         header: "Prescription",
         accessorKey: "prescription_id",
         cell: ({ row }) => {
-            return <PrescriptionData prescription_id={row.getValue('prescription_id')} />
+            return <PrescriptionData prescription_id={row.getValue('prescription_id') as string} appointment_id={row.original.appointment_id as string} />
         }
     }
 ]

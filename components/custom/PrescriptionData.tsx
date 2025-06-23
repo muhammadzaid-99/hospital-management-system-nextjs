@@ -16,22 +16,27 @@ import {
 import { Label } from "@/components/ui/label"
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { getPrescriptionInfo } from "@/lib/actions/patient.actions"
+import { getLabTestNames, getPrescriptionInfo } from "@/lib/actions/patient.actions"
 import ClipLoader from "react-spinners/ClipLoader"
 import { MedicineColumns } from './columns'
 import { DataTable } from './data-table'
+import { labTests } from '@/lib/constants/lab-tests'
+import { Badge } from '../ui/badge'
 
-const PrescriptionData = ({ prescription_id }: { prescription_id: string }) => {
+const PrescriptionData = ({ prescription_id, appointment_id }: { prescription_id: string, appointment_id: string }) => {
 
     const [prescriptionData, setPrescriptionData] = useState<any>(null);
+    const [labTestNames, setLabTestNames] = useState<any[]>([]);
     const [viewPrescriptionClicked, setViewPrescriptionClicked] = useState(false);
     // const prescription_id: string = row.getValue('prescription_id');
-    console.log(prescription_id)
+    // console.log(prescription_id)
 
     useEffect(() => {
         async function loadPrescription() {
             const prescription = await getPrescriptionInfo(prescription_id);
+            const _labtestnames = await getLabTestNames(appointment_id);
             setPrescriptionData(prescription);
+            setLabTestNames(_labtestnames);
         }
 
         if (viewPrescriptionClicked)
@@ -39,8 +44,8 @@ const PrescriptionData = ({ prescription_id }: { prescription_id: string }) => {
     }, [viewPrescriptionClicked])
 
     useEffect(() => {
-        console.log(prescriptionData)
-    }, [prescriptionData])
+        console.log(labTestNames)
+    }, [labTestNames])
 
     return (
         <Dialog>
@@ -65,6 +70,21 @@ const PrescriptionData = ({ prescription_id }: { prescription_id: string }) => {
                             <h3 className='mt-4 mb-2 font-medium uppercase text-sm'>Medications</h3>
                             <div className="overflow-x-auto" style={{ maxWidth: '100%', whiteSpace: 'nowrap' }}>
                                 <DataTable data={prescriptionData.medication} columns={MedicineColumns} />
+                            </div>
+
+                            <h3 className='mt-4 mb-2 font-medium uppercase text-sm'>Recommended Lab Tests</h3>
+                            <div className='flex flex-wrap gap-2'>
+                                {labTestNames.map((labTest) => {
+                                    const labTestObj = labTests.find((lab) => lab.value === labTest.test_name);
+                                    if (labTestObj) {
+                                        return (
+                                            <Badge key={labTest} className="flex items-center" variant="default">
+                                                {labTestObj.label}
+                                            </Badge>
+                                        )
+                                    }
+                                    return null;
+                                })}
                             </div>
                         </div>
                     ) : (
