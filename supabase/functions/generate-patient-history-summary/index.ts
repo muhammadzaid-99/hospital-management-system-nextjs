@@ -11,7 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from '@google/generative-ai'; // Replace with the actual library
 
 async function callGeminiAPI(prompt: any) {
-  const genAI = new GoogleGenerativeAI('AIzaSyANtcZhAge7w2eX1pU-7nkF-w6fBj5W5ZU');
+  const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API')!);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   // const prompt = "Write a story about a magic backpack."
