@@ -7,8 +7,8 @@ prescription, and the lab tests that come out of it move through the lab queue.
 
 ![Doctor dashboard, schedules tab](public/hms1.png)
 
-Next.js App Router and Supabase. There is no separate backend service: the
-database is the backend, and the app reaches it through server actions.
+Next.js App Router and Supabase. There is no separate backend service:
+the database is the backend, and the app reaches it through server actions.
 
 ## What you can do
 
@@ -106,6 +106,8 @@ keeps the ones where the embedded appointment is null. Underneath,
 refuses the second appointment and the loser of a race gets an error rather than
 a silent overwrite.
 
+![Patient dashboard: past appointments, and booking one of the free slots](public/hms2.png)
+
 ### The life of an appointment
 
 Five states in a Postgres enum: `Pending`, `Confirmed`, `Cancelled`, `Completed`,
@@ -136,6 +138,8 @@ Lab tests deliberately get no `service` row here. A service is work the hospital
 is doing, and at this point the test is only a recommendation. It starts as
 `Prescribed` and the service row waits for a technician, so billing never sees a
 service for work nobody agreed to.
+
+![Doctor dashboard: opening an appointment, filling in the checkup, and reading the patient history summary](public/hms-vid1.gif)
 
 ### Lab tests move by compare and set
 
